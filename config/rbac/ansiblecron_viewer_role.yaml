@@ -1,0 +1,20 @@
+# permissions for end users to view ansiblecrons.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ansiblecron-viewer-role
+rules:
+- apiGroups:
+  - ansible.casa-delle-coccinelle.link
+  resources:
+  - ansiblecrons
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ansible.casa-delle-coccinelle.link
+  resources:
+  - ansiblecrons/status
+  verbs:
+  - get

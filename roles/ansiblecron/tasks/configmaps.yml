@@ -1,0 +1,5 @@
+---
+- name: Create requirements configmap if defined
+  kubernetes.core.k8s:
+    template: requirements_configmap.j2
+  when: roles is defined or collections is defined

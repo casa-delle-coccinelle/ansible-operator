@@ -1,0 +1,58 @@
+---
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: "{{ ansible_operator_meta.name }}"
+  namespace: "{{ ansible_operator_meta.namespace }}"
+spec:
+  schedule: "{{ schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: ansible-cronjob
+              image: quay.io/operator-framework/ansible-operator:v1.23.0
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |
+{% if roles is defined %}
+                  ansible-galaxy role install -r {{ ansible_config_volume }}/requirements.yaml
+{% endif %}
+{% if collections is defined %}
+                  ansible-galaxy collection install -r {{ ansible_config_volume }}/requirements.yaml
+{% endif %}
+                  cat {{ ansible_config_volume }}/vault.pass
+              volumeMounts:
+{% if roles is defined or collections is defined %}
+                - name: requirements
+                  mountPath: {{ ansible_config_volume }}/requirements.yaml
+                  subPath: requirements.yaml
+{% endif %}
+{% if vault_password is defined %}
+                - name: vault-password
+                  mountPath: {{ ansible_config_volume }}/vault.pass
+                  subPath: vault.pass
+{% elif vault_password_secret is defined %}
+                - name: vault-password
+                  mountPath: {{ ansible_config_volume }}/vault.pass
+                  subPath: vault.pass
+{% endif %}
+          volumes:
+{% if roles is defined or collections is defined %}
+            - name: requirements
+              configMap:
+                name: "{{ ansible_operator_meta.name }}-requirements"
+{% endif %}
+{% if vault_password is defined %}
+            - name: vault-password
+              secret:
+                secretName: "{{ ansible_operator_meta.name }}-vault"
+{% elif vault_password_secret is defined %}
+            - name: vault-password
+              secret:
+                secretName: {{ vault_password_secret[0].secret_ref.name }}
+{% endif %}
+          restartPolicy: OnFailure
