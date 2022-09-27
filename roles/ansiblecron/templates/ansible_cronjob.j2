@@ -24,7 +24,7 @@ spec:
 {% if collections is defined %}
                   ansible-galaxy collection install -r {{ ansible_config_volume }}/requirements.yaml
 {% endif %}
-                  cat {{ ansible_config_volume }}/vault.pass
+                  ls {{ ansible_user_home }}/.ssh
               volumeMounts:
 {% if roles is defined or collections is defined %}
                 - name: requirements
@@ -40,6 +40,19 @@ spec:
                   mountPath: {{ ansible_config_volume }}/vault.pass
                   subPath: vault.pass
 {% endif %}
+{% if ssh_keys is defined %}
+{% for key in keys_list %}
+                - name: {{ key }}
+                  mountPath: {{ ansible_user_home }}/.ssh/{{ key }}
+                  subPath: {{ key }}
+{% endfor %}
+{% elif ssh_keys_secrets is defined %}
+{% for key in ssh_keys_secrets %}
+                - name: {{ key.secret_ref.name }}
+                  mountPath: {{ ansible_user_home }}/.ssh/{{ key }}
+                  subPath: {{ key.secret_ref.name }}
+{% endfor %}
+{% endif %}
           volumes:
 {% if roles is defined or collections is defined %}
             - name: requirements
@@ -54,5 +67,18 @@ spec:
             - name: vault-password
               secret:
                 secretName: {{ vault_password_secret[0].secret_ref.name }}
+{% endif %}
+{% if ssh_keys is defined %}
+{% for key in keys_list %}
+            - name: {{ key }}
+              secret:
+                secretName: {{ key }}
+{% endfor %}
+{% elif ssh_keys_secrets is defined %}
+{% for key in ssh_keys_secrets %}
+            - name: {{ key.secret_ref.name }}
+              secret:
+                secretName: {{ key.secret_ref.name }}
+{% endfor %}
 {% endif %}
           restartPolicy: OnFailure
