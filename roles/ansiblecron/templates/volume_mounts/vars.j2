@@ -1,0 +1,12 @@
+{% if additional_vars.config_map_ref.name is defined %}
+                - name: vars-configmap
+                  mountPath: {{ ansible_config_volume }}/vars/configmap
+{% endif %}
+{% if additional_vars.secret_ref.name is defined %}
+                - name: vars-secret
+                  mountPath: {{ ansible_config_volume }}/vars/secret
+{% endif %}
+{% if additional_vars is defined and additional_vars.config_map_ref.name is not defined and additional_vars.secret_ref.name is not defined %}
+                - name: vars-configmap
+                  mountPath: {{ ansible_config_volume }}/vars/configmap
+{% endif %}

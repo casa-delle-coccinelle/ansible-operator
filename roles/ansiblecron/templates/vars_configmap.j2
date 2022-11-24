@@ -1,0 +1,9 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ ansible_operator_meta.name }}-vars
+  namespace: {{ ansible_operator_meta.namespace }}
+data:
+  vars.yaml: |
+    {{ additional_vars | to_nice_yaml | indent(width=4, first=False) }}

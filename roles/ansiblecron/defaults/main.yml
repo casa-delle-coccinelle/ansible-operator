@@ -1,4 +1,4 @@
 ---
 ansible_config_volume: '/opt/config'
 ansible_user: 'ansible'
-ansible_user_home: '/opt/ansible'
+ansible_user_home: '/home/ansible'

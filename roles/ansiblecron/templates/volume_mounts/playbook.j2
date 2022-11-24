@@ -1,0 +1,11 @@
+{% if playbook.git.repo is defined %}
+                - name: config
+                  mountPath: {{ ansible_config_volume }}/config.sh
+                  subPath: config.sh
+{% elif playbook.secret_ref is defined %}
+                - name: playbook
+                  mountPath: {{ ansible_config_volume }}/playbook
+{% elif playbook.config_map_ref is defined %}
+                - name: playbook
+                  mountPath: {{ ansible_config_volume }}/playbook
+{% endif %}

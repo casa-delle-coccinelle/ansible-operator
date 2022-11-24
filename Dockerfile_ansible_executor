@@ -8,7 +8,7 @@ RUN adduser -h /home/ansible -s /bin/bash ansible -D
 
 RUN mkdir /home/ansible/.ssh /opt/config
 
-COPY ssh_config.sh /home/ansible 
+COPY start.sh /home/ansible 
 
 RUN chown -R ansible:ansible /home/ansible
 

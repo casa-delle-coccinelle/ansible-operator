@@ -1,0 +1,15 @@
+{% if additional_vars.config_map_ref.name is defined %}
+            - name: vars-configmap
+              configMap:
+                name: {{ additional_vars.config_map_ref.name }}
+{% endif %}
+{% if additional_vars.secret_ref.name is defined %}
+            - name: vars-secret
+              secret:
+                secretName: {{ additional_vars.secret_ref.name }}
+{% endif %}
+{% if additional_vars is defined and additional_vars.config_map_ref.name is not defined and additional_vars.secret_ref.name is not defined %}
+            - name: vars-configmap
+              configMap:
+                name: {{ ansible_operator_meta.name }}-vars
+{% endif %}

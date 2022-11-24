@@ -1,10 +1,10 @@
 ---
-- name: Include configmaps tasks
-  include_tasks: configmaps.yml
-
 - name: Include secrets tasks
   include_tasks: secrets.yaml
 
+- name: Include configmaps tasks
+  include_tasks: configmaps.yml
+
 - name: Deploy cronjob
   kubernetes.core.k8s:
-    template: ansible_cronjob.j2
+    definition: "{{ lookup('ansible.builtin.template', './ansible_cronjob.j2') }}"
