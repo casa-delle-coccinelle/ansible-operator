@@ -30,6 +30,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # casa-delle-coccinelle.link/ansible-operator-bundle:$VERSION and casa-delle-coccinelle.link/ansible-operator-catalog:$VERSION.
 IMAGE_TAG_BASE ?= c-harbor.casa-delle-coccinelle.link/operator/ansible-operator
+EXECUTOR_IMAGE_TAG_BASE ?= c-harbor.casa-delle-coccinelle.link/operator/ansible-executor
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
@@ -48,6 +49,7 @@ endif
 
 # Image URL to use all building/pushing image targets
 IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
+EXECUTOR_IMG ?= $(EXECUTOR_IMAGE_TAG_BASE):v$(VERSION)
 
 .PHONY: all
 all: docker-build
@@ -78,10 +80,12 @@ run: ansible-operator ## Run against the configured Kubernetes cluster in ~/.kub
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
 	docker build -t ${IMG} .
+	docker build -f Dockerfile_ansible_executor -t ${EXECUTOR_IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
+	docker push ${EXECUTOR_IMG}
 
 ##@ Deployment
 
