@@ -23,6 +23,13 @@ spec:
                 - -c
                 - |
                   bash {{ ansible_user_home }}/start.sh
+              env:
+                - name: ANSIBLE_EXECUTOR_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: ANSIBLE_EXECUTOR_NAME
+                  value: "{{ ansible_operator_meta.name }}"
               volumeMounts:
 {% include './templates/volume_mounts/requirements.j2' %}
 {% include './templates/volume_mounts/vault_password.j2' %}
