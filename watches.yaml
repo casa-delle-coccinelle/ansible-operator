@@ -3,9 +3,9 @@
 - version: v1alpha1
   group: ansible.casa-delle-coccinelle.link
   kind: AnsibleJob
-  role: ansiblejob
+  playbook: ansiblejob.yaml
 - version: v1alpha1
   group: ansible.casa-delle-coccinelle.link
   kind: AnsibleCron
-  role: ansiblecron
+  playbook: ansiblecron.yaml
 #+kubebuilder:scaffold:watch

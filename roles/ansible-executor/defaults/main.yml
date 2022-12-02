@@ -2,3 +2,6 @@
 ansible_config_volume: '/opt/config'
 ansible_user: 'ansible'
 ansible_user_home: '/home/ansible'
+
+job_restart_policy: 'OnFailure'
+job_backoff_limit: '3'

@@ -1,5 +1,0 @@
-{% if roles is defined or collections is defined %}
-                - name: requirements
-                  mountPath: {{ ansible_config_volume }}/requirements.yaml
-                  subPath: requirements.yaml
-{% endif %}

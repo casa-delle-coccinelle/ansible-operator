@@ -1,0 +1,12 @@
+---
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: "{{ ansible_operator_meta.name }}"
+  namespace: "{{ ansible_operator_meta.namespace }}"
+spec:
+  schedule: "{{ schedule }}"
+  jobTemplate:
+{% filter indent(width=4, first=True, blank=True) %}
+{% include './templates/pod_template.j2' %}
+{% endfilter %}

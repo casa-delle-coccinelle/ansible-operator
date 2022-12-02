@@ -1,5 +1,0 @@
-{% if roles is defined or collections is defined %}
-            - name: requirements
-              configMap:
-                name: "{{ ansible_operator_meta.name }}-requirements"
-{% endif %}

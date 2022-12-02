@@ -1,5 +1,0 @@
-{% if additional_ansible_options is defined %}
-            - name: options
-              configMap:
-                name: "{{ ansible_operator_meta.name }}-options"
-{% endif %}

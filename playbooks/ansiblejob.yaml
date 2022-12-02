@@ -1,0 +1,6 @@
+---
+- hosts: localhost
+  vars:
+    k8s_resource_type: "job"
+  roles:
+    - role: ansible-executor

@@ -1,19 +1,14 @@
 {% if ssh_keys is defined %}
 {% for key in ssh_keys %}
             - name: {{ key.name }}
-              secret:
-                secretName: {{ key.secret_ref.name }}
-                defaultMode: 0400
-                readOnly: true
+              mountPath: {{ ansible_user_home }}/keys/{{ key.name }}
 {% if key.config.config_map_ref.name is defined %}
             - name: {{ key.name }}-config
-              configMap:
-                name: {{ key.config.config_map_ref.name }}
+              mountPath: {{ ansible_user_home }}/keys/{{ key.name }}/config
 {% endif %}
 {% if key.config.secret_ref.name is defined %}
             - name: {{ key.name }}-secret-config
-              secret:
-                secretName: {{ key.config.secret_ref.name }}
+              mountPath: {{ ansible_user_home }}/keys/{{ key.name }}/secret-config
 {% endif %}
 {% endfor %}
 {% endif %}
