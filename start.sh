@@ -2,7 +2,6 @@
 #
 # start.sh
 
-
 PLAYBOOK_CONFIG_PATH=${PLAYBOOK_CONFIG_PATH:-/opt/config}
 PLAYBOOK_CONFIG_FILE=${PLAYBOOK_CONFIG_FILE:-config.sh}
 
@@ -12,7 +11,6 @@ RETRIES_INTERVAL=${RETRIES_INTERVAL:-10}
 SSH_USER_NAME=${SSH_USER_NAME:-ansible}
 SSH_KEYS_PATH=${SSH_KEYS_PATH:-keys}
 
-env
 
 function logs_format(){
     level="${1}"
@@ -30,42 +28,46 @@ Host *
 EOF
     
     for key in $(ls /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}); do
+        logs_format info "Configuring SSH client with key ${key}"
         if [ -d /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/config ]; then
+            logs_format info "Adding SSH client configuration provided in configmap using identity file /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/ssh-privatekey"
             cat << EOF >> /home/${SSH_USER_NAME}/.ssh/config
 $(cat /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/config/ssh_config)
   IdentityFile /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/ssh-privatekey
 EOF
         fi
         if  [ -d /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/secret-config ]; then
+            logs_format info "Adding SSH client configuration provided in secret using identity file /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/ssh-privatekey"
             cat << EOF >> /home/${SSH_USER_NAME}/.ssh/config
 $(cat /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/secret-config/ssh_config)
   IdentityFile /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/ssh-privatekey
 EOF
         fi
         if [ ! -d /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/config ] && [ ! -d /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/secret-config ]; then
+            logs_format info "No configuration provided, identity file /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/ssh-privatekey will used for all hosts"
             cat << EOF >> /home/${SSH_USER_NAME}/.ssh/config
 Host *
   IdentityFile /home/${SSH_USER_NAME}/${SSH_KEYS_PATH}/${key}/ssh-privatekey
 EOF
         fi
     done
-    
+
+    logs_format info "SSH client configured, setting restricted permissions for file /home/${SSH_USER_NAME}/.ssh/config"
     chmod 0600 /home/${SSH_USER_NAME}/.ssh/config
 }
 
 function git_repo_setup(){
-    for retry in $(seq 1 ${RETRIES}); do
-        git clone ${GIT_REPO} ${PLAYBOOK_CONFIG_PATH}/repo
-        if [ $? -eq 0 ];then
-            break
-        fi
-        if [ ${retry} -eq ${RETRIES} ]; then
-            exit 1
-        fi
-        sleep ${RETRIES_INTERVAL}
-    done
+    logs_format info "Attempting to clone git repository ${GIT_REPO} with ${RETRIES} retries"
+    git clone ${GIT_REPO} ${PLAYBOOK_CONFIG_PATH}/repo &>/dev/null
+    if [ $? -eq 0 ];then
+        logs_format info "Git repository cloned successfully"
+    else
+        logs_format info "Git repository was not cloned, exiting"
+        exit 1
+    fi
+    logs_format info "Checkout to git branch ${GIT_REPO_BRANCH}"
     cd ${PLAYBOOK_CONFIG_PATH}/repo
-    git checkout ${GIT_REPO_BRANCH}
+    git checkout ${GIT_REPO_BRANCH} &>/dev/null
 }
 
 function install_requirements(){
@@ -74,7 +76,7 @@ function install_requirements(){
 
     logs_format info "Ansible requirements will be installed from ${path} with ${RETRIES} retries"
     for retry in $(seq 1 ${RETRIES}); do
-        ansible-galaxy install -r "${path}"
+        ansible-galaxy install -r "${path}" &>/dev/null
         if [ $? -eq 0 ];then
             logs_format info "Ansible requirements installed successfully on ${retry} try"
             break
@@ -139,28 +141,41 @@ function playbook_options(){
 
 
 function start_playbook(){
-#TODO: Add retry and exit code check
+    playbook=''
+    options=$(playbook_options)
+
     if [ ! -z "${GIT_PLAYBOOK_NAME+x}" ]; then
         logs_format info "Ansible playbook with name ${GIT_PLAYBOOK_NAME} will be started from git repository ${GIT_REPO}/${GIT_REPO_PATH}"
-        echo "$(playbook_options)" | xargs ansible-playbook ${PLAYBOOK_CONFIG_PATH}/repo/${GIT_REPO_PATH}/${GIT_PLAYBOOK_NAME}
+        playbook="${PLAYBOOK_CONFIG_PATH}/repo/${GIT_REPO_PATH}/${GIT_PLAYBOOK_NAME}"
     elif [ -f $(ls ${PLAYBOOK_CONFIG_PATH}/playbook) ]; then
         logs_format info "Ansible playbook with name $(ls ${PLAYBOOK_CONFIG_PATH}/playbook) provided in secret/configmap will be started"
-        echo "$(playbook_options)" | xargs ansible-playbook $(ls ${PLAYBOOK_CONFIG_PATH}/playbook)
+        playbook=$(ls ${PLAYBOOK_CONFIG_PATH}/playbook)
+    fi
+
+    logs_format info "Executing ansible playbook with options ${options}"
+    xargs ansible-playbook <<- EOF
+${playbook} ${options}
+EOF
+    if [ $? -eq 0 ];then
+        logs_format info "Ansible playbook execution is successful"
+    else
+        logs_format info "Ansible playbook execution failed, exiting"
+        exit 1
     fi
 
 }
 
 function main(){
-    if [ -d /home/${SSH_USER_NAME}/${KEYS_PATH} ]; then
-        logs_format info "Keys directory /home/${SSH_USER_NAME}/${KEYS_PATH} exists, generating SSH client config"
+    if [ -d "/home/${SSH_USER_NAME}/${SSH_KEYS_PATH}" ]; then
+        logs_format info "Keys directory /home/${SSH_USER_NAME}/${SSH_KEYS_PATH} exists, generating SSH client config"
         ssh_config
     fi
-    if [ -f ${PLAYBOOK_CONFIG_PATH}/${PLAYBOOK_CONFIG_FILE} ]; then
+    if [ -f "${PLAYBOOK_CONFIG_PATH}/${PLAYBOOK_CONFIG_FILE}" ]; then
         logs_format info "Git repository configuration is provided, setting up git repo"
-        source ${PLAYBOOK_CONFIG_PATH}/${PLAYBOOK_CONFIG_FILE}
+        source "${PLAYBOOK_CONFIG_PATH}/${PLAYBOOK_CONFIG_FILE}"
         git_repo_setup
     fi
-    if [ -f ${PLAYBOOK_CONFIG_PATH}/requirements.yaml ];then
+    if [ -f "${PLAYBOOK_CONFIG_PATH}/requirements.yaml" ];then
         logs_format info "Ansible requirements configuration is provided, will install requirements with path ${PLAYBOOK_CONFIG_PATH}/requirements.yaml"
         install_requirements "${PLAYBOOK_CONFIG_PATH}/requirements.yaml"
     fi
