@@ -15,12 +15,3 @@
     definition: "{{ lookup('ansible.builtin.template', './ansible_job.j2') }}"
   when: k8s_resource_type == "job"
 
-    #- name: test job
-    #  template:
-    #    src: 'ansible_job.j2'
-    #    dest: /tmp/ansible_job.yaml
-    #
-    #- name: test cron
-    #  template:
-    #    src: 'ansible_cronjob.j2'
-    #    dest: /tmp/ansible_cron.yaml
