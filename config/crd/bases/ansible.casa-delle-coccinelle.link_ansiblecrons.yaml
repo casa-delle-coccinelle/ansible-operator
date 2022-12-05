@@ -159,6 +159,8 @@ spec:
                           description: Name of configmap holding ansible inventory
                           type: string
                           pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
                     secretRef:
                       type: object
                       properties:
@@ -166,10 +168,57 @@ spec:
                           description: Name of secret holding ansible inventory
                           type: string
                           pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
                   anyOf:
                     - required: [configMapRef]
                     - required: [secretRef]
-
+                      #TODO: add example
+              playbook:
+                description: Ansible playbook configuration
+                type: object
+                properties:
+                  git:
+                    #TODO: Add defaults???
+                    description: Git repository configuration for ansible playbook
+                    type: object
+                    properties:
+                      repo:
+                        description: Git repository URL, holding ansible playbook
+                        type: string
+                      repo_path:
+                        description: Git repository path, relative to the repository root where ansible playbook is located
+                        type: string
+                      playbook_name:
+                        description: Name of the ansible playbook
+                        type: string
+                      requirements_name:
+                        description: Name of the ansible galaxy requirement file, should be located in the same path as the playbook
+                        type: string
+                    required:
+                      - repo
+                  configMapRef:
+                    type: object
+                    properties:
+                      name:
+                        description: Name of configmap, holding ansible playbook
+                        type: string
+                        pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                    required:
+                      - name
+                  secretRef:
+                    type: object
+                    properties:
+                      name:
+                        description: Name of secret, holding ansible playbook
+                        type: string
+                        pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                    required:
+                      - name
+                oneOf:
+                  - required: [git]
+                  - required: [configMapRef]
+                  - required: [secretRef]
             required:
               - schedule
           status:
