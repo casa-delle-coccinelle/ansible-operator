@@ -33,6 +33,145 @@ spec:
             description: Spec defines the desired state of AnsibleCron
             type: object
             x-kubernetes-preserve-unknown-fields: true
+            properties:
+              schedule:
+                description: Schedule for the k8s cronjob
+                type: string
+                pattern: '^(\d+|\*)(/\d+)?(\s+(\d+|\*)(/\d+)?){4}$'
+              roles:
+                description: Ansible galaxy roles list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Ansible role name
+                      type: string
+                    src:
+                      description: Ansible role source
+                      type: string
+                    version:
+                      description: Ansible role version
+                      type: string
+                  required:
+                    - name
+                    - src
+              collections:
+                description: Ansible galaxy collections list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Ansible collection name
+                      type: string
+                    version:
+                      description: Ansible collection version
+                      type: string
+                  required:
+                    - name
+              vault_password:
+                description: Ansible vault password
+                type: string
+                format: password
+              vault_password_secret:
+                description: Ansible vault password secret ref
+                type: object
+                properties:
+                  secretRef:
+                    type: object
+                    properties:
+                      name:
+                        description: Name of secret holding ansible vault password
+                        type: string
+                        pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                    required:
+                      - name
+                required:
+                  - secretRef
+                example:
+                  secretRef:
+                    name: foo-bar-0
+              ssh_keys:
+                description: SSH keys list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Use friendly SSH key name
+                      type: string
+                    secretRef:
+                      type: object
+                      properties:
+                        name:
+                          description: Name of secret with ssh-privatekey and ssh-publickey data
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                    config:
+                      type: object
+                      properties:
+                        configMapRef:
+                          type: object
+                          properties:
+                            name:
+                              description: Name of configmap holding SSH key client configuration
+                              type: string
+                              pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                          required:
+                            - name
+                        secretRef:
+                          type: object
+                          properties:
+                            name:
+                              description: Name of secret holding SSH key client configuration
+                              type: string
+                              pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                          required:
+                            - name
+                      anyOf:
+                        - required: [configMapRef]
+                        - required: [secretRef]
+                  required:
+                    - name
+                    - secretRef
+                  example:
+                    name: key-0
+                    secretRef:
+                      name: ssh-key-0
+                    config:
+                      configMapRef:
+                        name: ssh-key-0-config
+                      secretRef:
+                        name: ssh-key-0-config
+              inventory:
+                description: Ansible inventory list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    configMapRef:
+                      type: object
+                      properties:
+                        name: 
+                          description: Name of configmap holding ansible inventory
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                    secretRef:
+                      type: object
+                      properties:
+                        name: 
+                          description: Name of secret holding ansible inventory
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                  anyOf:
+                    - required: [configMapRef]
+                    - required: [secretRef]
+
+            required:
+              - schedule
           status:
             description: Status defines the observed state of AnsibleCron
             type: object
