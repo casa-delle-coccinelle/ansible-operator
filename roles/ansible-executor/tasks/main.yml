@@ -1,6 +1,7 @@
 ---
 - name: Include secrets tasks
   include_tasks: secrets.yaml
+  when: vault_password is defined
 
 - name: Include configmaps tasks
   include_tasks: configmaps.yml
