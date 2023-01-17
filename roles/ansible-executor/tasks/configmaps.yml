@@ -12,7 +12,7 @@
 - name: Create additional vars configmap if defined
   kubernetes.core.k8s:
     template: vars_configmap.j2
-  when: additional_vars is defined and additional_vars.config_map_ref.name is not defined and additional_vars.secret_ref.name is not defined
+  when: additional_vars|selectattr('name', 'defined')|selectattr('value', 'defined') is defined
 
 - name: Create additional options configmap if defined
   kubernetes.core.k8s:
