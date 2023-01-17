@@ -173,13 +173,11 @@ spec:
                   anyOf:
                     - required: [configMapRef]
                     - required: [secretRef]
-                      #TODO: add example
               playbook:
                 description: Ansible playbook configuration
                 type: object
                 properties:
                   git:
-                    #TODO: Add defaults???
                     description: Git repository configuration for ansible playbook
                     type: object
                     properties:
@@ -219,8 +217,68 @@ spec:
                   - required: [git]
                   - required: [configMapRef]
                   - required: [secretRef]
+              additional_vars:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Ansible variable name
+                      type: string
+                    value:
+                      description: Ansible variable value. Numeric and boolean values should be quoted with single quotes
+                      x-kubernetes-int-or-string: true
+                    configMapRef:
+                      type: object
+                      properties:
+                        name:
+                          description: Name of configmap holding ansible variables
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                    secretRef:
+                      type: object
+                      properties:
+                        name:
+                          description: Name of secret, holding ansible variables
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                  oneOf:
+                    - required: [name, value]
+                    - required: [configMapRef]
+                    - required: [secretRef]
+              additional_ansible_options:
+                description: List of additional ansible playbook options, will be supplied to the playbook as defined without verification.
+                type: array
+                items:
+                  type: string
+              additional_env:
+                description: List and environment variables
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Environment variable name
+                      type: string
+                    value:
+                      description: Environment variable value. Numeric and boolean values should be quoted with single quotes.
+                      type: string
+                  required: [name, value]
+              job_backoffLimit:
+                description: Job backoff limit
+                type: integer
+                format: int32
+                minimum: 1
+              job_restartPolicy:
+                description: Job restart policy
+                type: string
             required:
               - schedule
+              - playbook
           status:
             description: Status defines the observed state of AnsibleCron
             type: object
