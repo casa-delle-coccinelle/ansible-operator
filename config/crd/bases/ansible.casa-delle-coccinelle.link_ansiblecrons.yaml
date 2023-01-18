@@ -266,7 +266,7 @@ spec:
                       type: string
                     value:
                       description: Environment variable value. Numeric and boolean values should be quoted with single quotes.
-                      type: string
+                      x-kubernetes-int-or-string: true
                   required: [name, value]
               job_backoffLimit:
                 description: Job backoff limit
