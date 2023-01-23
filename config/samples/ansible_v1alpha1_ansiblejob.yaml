@@ -1,6 +1,0 @@
-apiVersion: ansible.casa-delle-coccinelle.link/v1alpha1
-kind: AnsibleJob
-metadata:
-  name: ansiblejob-sample
-spec:
-  # TODO(user): Add fields here

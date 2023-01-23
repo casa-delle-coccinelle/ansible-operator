@@ -110,6 +110,7 @@ function playbook_options(){
             logs_format info "Ansible inventory ${PLAYBOOK_CONFIG_PATH}/inventory/${file} loaded"
         done
     fi
+    #TODO fix this, so different file name is valid
     if [ -f ${PLAYBOOK_CONFIG_PATH}/vault.pass ]; then
         logs_format info "Ansible vault password is provided"
         vault_password=$(echo "--vault-password-file ${PLAYBOOK_CONFIG_PATH}/vault.pass")
