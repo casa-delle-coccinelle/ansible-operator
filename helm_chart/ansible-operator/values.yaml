@@ -1,0 +1,80 @@
+# Default values for ansible-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+proxyImage:
+  repository: gcr.io/kubebuilder/kube-rbac-proxy 
+  pullPolicy: IfNotPresent
+  tag: v0.13.0
+
+managerImage:
+  # TODO Switch to github 
+  repository: c-harbor.casa-delle-coccinelle.link/operator/ansible-operator 
+  pullPolicy: IfNotPresent
+  tag: v0.1.0
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+chartWideAnnotations: {}
+
+managerArgs: []
+managerEnv: []
+healthProbeBindAddress: 6789
+metrics:
+  enabled: true
+  port: 8080
+probes:
+  liveness:
+    enabled: true
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readiness:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+podSecurityContext: {}
+
+securityContext:
+  proxy:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+  manager:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+
+resources:
+  proxy:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 5m
+      memory: 64Mi
+  manager: 
+    limits:
+      cpu: 500m
+      memory: 768Mi
+    requests:
+      cpu: 10m
+      memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
