@@ -49,9 +49,9 @@ List of additional ansible playbook options (e.g. "--force-handlers"). The optio
 List of environment variables to be exposed in executor's container
 - **additional_env.name** - Variable name
 - **additional_env.value** - Variable value. Numeric and boolean values should be quoted in order to pass validation
-### job_backoffLimit
+### job_backoffLimit (int32)
 Backoff limit to be set on executor pod
-### job_restartPolicy
+### job_restartPolicy (string)
 Pod restart policy for the executor pod.
 
 ## AnsibleCronSpec
