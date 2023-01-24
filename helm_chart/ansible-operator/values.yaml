@@ -1,6 +1,6 @@
 replicaCount: 1
 
-managerImage:
+image:
   # TODO Switch to github 
   repository: c-harbor.casa-delle-coccinelle.link/operator/ansible-operator 
   pullPolicy: IfNotPresent

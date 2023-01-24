@@ -18,7 +18,6 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/default-container: manager
         {{- if .Values.chartWideAnnotations }}
         {{- .Values.chartWideAnnotations | toYaml | nindent 8 }}
         {{- end }}
@@ -31,8 +30,8 @@ spec:
     spec:
       containers:
       - name: manager
-        image: {{ .Values.managerImage.repository }}:{{ .Values.managerImage.tag }}
-        imagePullPolicy: {{ .Values.managerImage.pullPolicy }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         args:
         {{- include "ansible-operator.manager-args" . | nindent 8 -}}
         {{- if .Values.metrics.enabled -}}
