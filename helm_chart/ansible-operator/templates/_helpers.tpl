@@ -76,7 +76,7 @@ annotations:
 Manager Container Args
 */}}
 {{- define "ansible-operator.manager-args" -}}
-- --health-probe-bind-address={{ .Values.healthProbeBindAddress }}
+- --health-probe-bind-address=:{{ .Values.healthProbeBindAddress }}
 {{ if .Values.metrics.enabled -}}
 - --metrics-bind-address=127.0.0.1:{{ .Values.metrics.port }}
 {{- end }}
@@ -89,3 +89,24 @@ Manager Container Args
 {{- end }}
 {{ end }}
 
+{{/*
+Manager Container Probes
+*/}}
+{{- define "ansible-operator.probes" -}}
+{{- if .Values.probes.liveness.enabled -}}
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: {{ .Values.healthProbeBindAddress }}
+  initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+  periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+{{- end -}}
+{{ if .Values.probes.readiness.enabled }}
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: {{ .Values.healthProbeBindAddress }}
+  initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+  periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+{{- end }}
+{{- end }}

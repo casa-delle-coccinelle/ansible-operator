@@ -2,11 +2,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  {{- if .Values.chartWideAnnotations }}
+  annotations:
+    {{- .Values.chartWideAnnotations | toYaml | nindent 4 }}
+  {{- end }}
   labels:
     control-plane: controller-manager
+    {{- include "ansible-operator.labels" . | nindent 4 }}
   name: {{ include "ansible-operator.fullname" . }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       control-plane: controller-manager
@@ -14,69 +19,59 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
+        {{- if .Values.chartWideAnnotations }}
+        {{- .Values.chartWideAnnotations | toYaml | nindent 8 }}
+        {{- end }}
+        {{- if .Values.podAnnotations }}
+        {{- .Values.podAnnotations | toYaml | nindent 8 }}
+        {{- end }}
       labels:
         control-plane: controller-manager
+        {{- include "ansible-operator.labels" . | nindent 8 }}
     spec:
       containers:
-      - name: kube-rbac-proxy
-        image: {{ .Values.proxyImage.repository }}:{{ .Values.managerImage.tag }}
-        imagePullPolicy: {{ .Values.proxyImage.pullPolicy }}
-        args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
-        - --logtostderr=true
-        - --v=0
-        ports:
-        - containerPort: 8443
-          name: https
-          protocol: TCP
-        resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
-          requests:
-            cpu: 5m
-            memory: 64Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
       - name: manager
         image: {{ .Values.managerImage.repository }}:{{ .Values.managerImage.tag }}
         imagePullPolicy: {{ .Values.managerImage.pullPolicy }}
         args:
         {{- include "ansible-operator.manager-args" . | nindent 8 -}}
+        {{- if .Values.metrics.enabled -}}
+        ports:
+        - containerPort: {{ .Values.metrics.port }}
+          name: metrics
+          protocol: TCP
+        {{- end }}
+        {{- if .Values.managerEnv }}
         env:
-        - name: ANSIBLE_GATHERING
-          value: explicit
-        {{- if .Values.probes.liveness.enabled }}
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: {{ .Values.healthProbeBindAddress }}
-          initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
-        {{- end -}}
-        {{ if .Values.probes.readiness.enabled }}
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: {{ .Values.healthProbeBindAddress }}
-          initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+        {{- range $env := .Values.managerEnv }}
+        - name: {{ $env.name }}
+          value: {{ $env.value }}
         {{- end }}
-        {{- if .Values.resources.manager }}
+        {{- end }}
+        {{- include "ansible-operator.probes" . | nindent 8 -}} 
+        {{- with .Values.resources }}
         resources:
-          {{- .Values.resources.manager | toYaml | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
-        {{- if .Values.securityContext.manager }}
+        {{- with .Values.securityContext }}
         securityContext:
-          {{- .Values.securityContext.manager | toYaml | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
-      {{- if .Values.podSecurityContext }}
+      {{- with .Values.podSecurityContext }}
       securityContext: 
-        {{- .Values.podSecurityContext | toYaml | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "ansible-operator.serviceAccountName" . }} 
       terminationGracePeriodSeconds: 10
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
