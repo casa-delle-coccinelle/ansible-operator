@@ -12,5 +12,5 @@
 {% endif %}
 {% if additional_vars|selectattr('name', 'defined')|selectattr('value', 'defined') is defined %}
             - name: vars-configmap
-              mountPath: {{ ansible_config_volume }}/vars/configmap
+              mountPath: {{ ansible_config_volume }}/vars/vars-configmap
 {% endif %}

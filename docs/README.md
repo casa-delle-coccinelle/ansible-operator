@@ -12,7 +12,9 @@ List of ansible collections, needed by the playbook
 Ansible vault password. The operator will create Kubernetes secret with the password and mount it in executor's container.
 ### vault_password_secret (object)
 Kubernetes secret holding ansible vault password
-- **vault_password_secret.secretRef.name**, required - Name of the kubernetes secret holding ansible vault password. It will be mounted on the pod and supplied with --vault-password-file to the playbook
+- **vault_password_secret.secretRef.name**, required - Name of the kubernetes secret holding ansible vault password. It will be mounted on the pod and supplied with --vault-password-file to the playbook.
+
+If both *vault_password* and *vault_password_secret* are defined the password will be loaded from the provided secret.
 ### ssh_keys ([]object)
 List of SSH keys and SSH client configuration needed ansible to establish connection to the target hosts or to pull necessary repositories
 - **ssh_keys.name**, required - Name of the key

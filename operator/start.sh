@@ -111,9 +111,10 @@ function playbook_options(){
         done
     fi
     #TODO fix this, so different file name is valid
-    if [ -f ${PLAYBOOK_CONFIG_PATH}/vault.pass ]; then
-        logs_format info "Ansible vault password is provided"
-        vault_password=$(echo "--vault-password-file ${PLAYBOOK_CONFIG_PATH}/vault.pass")
+    if [ -d ${PLAYBOOK_CONFIG_PATH}/vault ]; then
+        vault_file_name=$(ls ${PLAYBOOK_CONFIG_PATH}/vault)
+        logs_format info "Ansible vault password will be loaded from file ${PLAYBOOK_CONFIG_PATH}/vault/${vault_file_name})"
+        vault_password=$(echo "--vault-password-file ${PLAYBOOK_CONFIG_PATH}/vault/${vault_file_name}")
     fi
     if [ -d ${PLAYBOOK_CONFIG_PATH}/vars/configmap ]; then
         logs_format info "Additional ansible variables are provided in configmap"
@@ -127,6 +128,13 @@ function playbook_options(){
         for file in $(ls "${PLAYBOOK_CONFIG_PATH}/vars/secret"); do
             additional_vars=$(echo "${additional_vars} -e @${PLAYBOOK_CONFIG_PATH}/vars/secret/${file}")
             logs_format info "Additional variables from file ${PLAYBOOK_CONFIG_PATH}/vars/secret/${file} loaded"
+        done
+    fi
+    if [ -d ${PLAYBOOK_CONFIG_PATH}/vars/vars-configmap ]; then
+        logs_format info "Additional ansible variables are provided"
+        for file in $(ls "${PLAYBOOK_CONFIG_PATH}/vars/vars-configmap"); do
+            additional_vars=$(echo "${additional_vars} -e @${PLAYBOOK_CONFIG_PATH}/vars/vars-configmap/${file}")
+            logs_format info "Additional variables from file ${PLAYBOOK_CONFIG_PATH}/vars/vars-configmap/${file} loaded"
         done
     fi
     if [ -f ${PLAYBOOK_CONFIG_PATH}/options/options.list ]; then
