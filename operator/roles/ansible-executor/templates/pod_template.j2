@@ -3,6 +3,7 @@ spec:
     spec:
       containers:
         - name: ansible-cronjob
+{# TODO: set image as variable #}
           image: c-harbor.casa-delle-coccinelle.link/operator/ansible-executor:v0.1.0
           imagePullPolicy: Always
           securityContext:
@@ -13,7 +14,7 @@ spec:
             - /bin/bash
             - -c
             - |
-              bash {{ ansible_user_home }}/start.sh
+              bash {{ ansible_user_home }}/executor_start.sh
           env:
             - name: ANSIBLE_EXECUTOR_NAMESPACE
               valueFrom:
