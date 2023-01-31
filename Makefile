@@ -1,10 +1,10 @@
-VERSION ?= 0.1.0
+VERSION ?= v0.1.0
 NAMESPACE ?= ansible-operator
 RELEASE_NAME ?= ansible-operator
-IMAGE_TAG_BASE ?= c-harbor.casa-delle-coccinelle.link/operator/ansible-operator
+OPERATOR_IMAGE_TAG_BASE ?= c-harbor.casa-delle-coccinelle.link/operator/ansible-operator
 EXECUTOR_IMAGE_TAG_BASE ?= c-harbor.casa-delle-coccinelle.link/operator/ansible-executor
-IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
-EXECUTOR_IMG ?= $(EXECUTOR_IMAGE_TAG_BASE):v$(VERSION)
+IMG ?= $(OPERATOR_IMAGE_TAG_BASE):$(VERSION)
+EXECUTOR_IMG ?= $(EXECUTOR_IMAGE_TAG_BASE):$(VERSION)
 
 .PHONY: all
 all: docker-build
