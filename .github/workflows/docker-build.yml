@@ -1,0 +1,43 @@
+name: Build Docker Image
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v**
+
+env:
+  REGISTRY: ghcr.io
+  OPERATOR_IMAGE_NAME: ansible-operator
+  EXECUTOR_IMAGE_NAME: ansible-executor
+  IMAGE_TAG: ${{ github.ref_name }}
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      packages: write
+    steps:
+      # Install the cosign tool except on PR
+      ## https://github.com/sigstore/cosign-installer
+      #- name: Install cosign
+      #  if: github.event_name != 'pull_request'
+      #  uses: sigstore/cosign-installer@f3c664df7af409cb4873aa5068053ba9d61a57b6 #v2.6.0
+      #  with:
+      #    cosign-release: 'v1.11.0'
+          
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+    
+      - uses: actions/checkout@v3
+      - name: Build the Docker image
+        run: env
