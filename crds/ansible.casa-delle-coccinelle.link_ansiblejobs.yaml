@@ -272,6 +272,18 @@ spec:
               job_restartPolicy:
                 description: Job restart policy
                 type: string
+              ansible_executor_image:
+                description: Docker image for ansible executor
+                type: string
+                default: "ghcr.io/casa-delle-coccinelle/ansible-operator/ansible-executor"
+              ansible_executor_image_tag:
+                description: Docker image tag for ansible executor
+                type: string
+                default: "v0.1.0"
+              ansible_executor_image_pull_policy:
+                description: Docker image pull policy for ansible executor
+                type: string
+                default: "IfNotPresent"
             required:
               - playbook
           status:
