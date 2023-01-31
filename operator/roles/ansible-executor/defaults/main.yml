@@ -5,3 +5,5 @@ ansible_user_home: '/home/ansible'
 
 job_restart_policy: 'OnFailure'
 job_backoff_limit: '1'
+
+ansible_executor_image_pull_policy: 'IfNotPresent'

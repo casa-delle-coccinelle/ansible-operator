@@ -4,8 +4,8 @@ spec:
       containers:
         - name: ansible-cronjob
 {# TODO: set image as variable #}
-          image: c-harbor.casa-delle-coccinelle.link/operator/ansible-executor:v0.1.0
-          imagePullPolicy: Always
+          image: {{ ansible_executor_image }}:{{ ansible_executor_image_tag }}
+          imagePullPolicy: {{ ansible_executor_image_pull_policy }}
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
