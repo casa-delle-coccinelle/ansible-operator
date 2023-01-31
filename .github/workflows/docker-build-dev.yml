@@ -15,8 +15,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  OPERATOR_IMAGE_TAG_BASE: ${{ env.REGISTRY }}/${{ github.repository }}/ansible-operator
-  EXECUTOR_IMAGE_TAG_BASE: ${{ env.REGISTRY }}/${{ github.repository }}/ansible-executor
+  OPERATOR_IMAGE_TAG_BASE: $( env.REGISTRY )/${{ github.repository }}/ansible-operator
+  EXECUTOR_IMAGE_TAG_BASE: $( env.REGISTRY )/${{ github.repository }}/ansible-executor
   VERSION: ${{ github.ref_name }}-dev
 
 
