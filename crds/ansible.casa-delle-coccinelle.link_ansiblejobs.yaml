@@ -269,9 +269,11 @@ spec:
                 type: integer
                 format: int32
                 minimum: 1
+                default: 1
               job_restartPolicy:
                 description: Job restart policy
                 type: string
+                default: "OnFailure"
               ansible_executor_image:
                 description: Docker image for ansible executor
                 type: string
