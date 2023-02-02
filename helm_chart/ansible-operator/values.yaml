@@ -1,8 +1,7 @@
 replicaCount: 1
 
 image:
-  # TODO Switch to github 
-  repository: c-harbor.casa-delle-coccinelle.link/operator/ansible-operator 
+  repository: ghcr.io/casa-delle-coccinelle/ansible-operator/ansible-operator 
   pullPolicy: IfNotPresent
   tag: v0.1.0
 
