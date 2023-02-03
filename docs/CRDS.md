@@ -52,9 +52,15 @@ List of environment variables to be exposed in executor's container
 - **additional_env.name** - Variable name
 - **additional_env.value** - Variable value. Numeric and boolean values should be quoted in order to pass validation
 ### job_backoffLimit (int32)
-Backoff limit to be set on executor pod
+Backoff limit to be set on executor pod. Defaults to 1
 ### job_restartPolicy (string)
-Pod restart policy for the executor pod.
+Pod restart policy for the executor pod. Defaults to "OnFailure"
+### ansible_executor_image (string)
+Docker image for ansible executor. Defaults to "ghcr.io/casa-delle-coccinelle/ansible-operator/ansible-executor"
+### ansible_executor_image_tag (string)
+Docker image tag for ansible executor. Defaults to "v0.1.0"
+### ansible_executor_image_pull_policy (string)
+Docker image pull policy for ansible executor. Defaults to "IfNotPresent"
 
 ## AnsibleCronSpec
 Supports ALL AnsibleJobSpec properties and
