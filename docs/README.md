@@ -1,62 +1,21 @@
-## AnsibleJobSpec
-### roles ([]object)
-List of ansible galaxy roles, needed by the playbook
-- **roles.name**, required - name of ansible galaxy role
-- **roles.src**, required - source of ansible galaxy role
-- **roles.version** - version of ansible galaxy role
-### collections ([]object)
-List of ansible collections, needed by the playbook
-- **collections.name**, required - name of ansible collection
-- **collections.version** - version of ansible collection
-### vault_password (string)
-Ansible vault password. The operator will create Kubernetes secret with the password and mount it in executor's container.
-### vault_password_secret (object)
-Kubernetes secret holding ansible vault password
-- **vault_password_secret.secretRef.name**, required - Name of the kubernetes secret holding ansible vault password. It will be mounted on the pod and supplied with --vault-password-file to the playbook.
 
-If both *vault_password* and *vault_password_secret* are defined the password will be loaded from the provided secret.
-### ssh_keys ([]object)
-List of SSH keys and SSH client configuration needed ansible to establish connection to the target hosts or to pull necessary repositories
-- **ssh_keys.name**, required - Name of the key
-- **ssh_keys.secretRef.name**, required - Name of Kubernetes secret, holding "ssh-privatekey" and "ssh-publickey" SSH key data. (reference - https://kubernetes.io/docs/concepts/configuration/secret/#use-case-pod-with-ssh-keys)
-- **ssh_keys.config.configMapRef.name** - Name of Kubernetes configmap, holding SSH client configuration for the SSH key
-- **ssh_keys.config.secretRef.name** - Name of Kubernetes secret, holding SSH client configuration for the SSH key
-### inventory ([]object)
-- **inventory.configMapRef.name** - Name of Kubernetes configmap holding ansible inventory to the supplied to ansible playbook
-- **inventory.secretRef.name** - Name of Kubernetes secret holding ansible inventory to the supplied to ansible playbook
-### playbook (object), required
-Ansible playbook to be executed. Currently the operator accepts playbooks defined as Kubernetes secret or configmap, as well as located in a git repository.
-##### Git
-- **playbook.git.repo**, required - Git repository URL
-- **playbook.git.repo_path** - Git repository path to the playbook, relative to the repository root. If not defined, the executor will looks for **playbook.git.playbook_name** in repository's root
-- **playbook.git.repo_branch** - Git repository branch, defaults to master
-- **playbook.git.playbook_name** - Ansible playbook file name, defaults to **playbook.yaml**
-- **playbook.git.requirements_name** - Ansible requirements file, defaults to **requirements.yaml**. If *roles* and *collections* properties are set, the executor will install them as well.
-##### Secret
-- **playbook.secretRef.name** - Name of Kubernetes secret holding ansible playbook
-##### Configmap
-- **playbook.configMapRef.name** - Name of Kubernetes configmap holding ansible playbook
+### ansible-operator
+Operator for managing execution of ansible playbooks as cronjobs and jobs in a Kubernetes cluster. Once installed, it will watch all namespaces for resources of type ansiblejobs and ansiblecrons. For each resource type it will create Kubernetes job or cronjob to run the ansible executor pod.
 
-At least one of playbook.git, playbook.secretRef and playbook.configMapRef must be defined.
-### additional_vars ([]object)
-List with additional variables to be provided to the playbook
-- **additional_vars.name** - Variable name
-- **additional_vars.value** - Variable value. Numeric and boolean values should be quoted in order to pass validation
-- **additional_vars.secretRef.name** - Name of Kubernetes secret holding ansible style variables
-- **additional_vars.configMapRef.name** - Name of Kubernetes configmap holding ansible style variables
-All defined variables will be supplied to the playbook.
-### additional_ansible_options ([]string)
-List of additional ansible playbook options (e.g. "--force-handlers"). The options will be supplied as defined without any verification.
-### additional_env ([]object)
-List of environment variables to be exposed in executor's container
-- **additional_env.name** - Variable name
-- **additional_env.value** - Variable value. Numeric and boolean values should be quoted in order to pass validation
-### job_backoffLimit (int32)
-Backoff limit to be set on executor pod
-### job_restartPolicy (string)
-Pod restart policy for the executor pod.
+### Installation
+To install the operator to your Kubernetes cluster you should have helm installed.
 
-## AnsibleCronSpec
-Supports ALL AnsibleJobSpec properties and
-### schedule (string)
-Schedule for the Kubernetes cronjob
+    git clone https://github.com/casa-delle-coccinelle/ansible-operator.git
+    cd ansible-operator/
+    make deploy
+This will apply CRD manifests to the Kubernetes cluster configured in ~/.kube/config and install the operator [helm chart](../helm_chart/ansible-operator) in *ansible-operator* namespace, using *ansible-operator* as helm release name
+To clear all resources use:
+
+    make undeploy
+This will delete the CRDs and namespace and uninstall the helm release from the Kubernetes cluster configured in ~/.kube/config
+
+### Documentation
+* [Custom resource definitions](./CRDS.md)
+* [ansible-executor ansible role](./ANSIBLE_EXECUTOR.md)
+* [ansible-operator helm chart](./HELM_CHART.md)
+* [Makefile](./MAKEFILE.md)
