@@ -2,6 +2,8 @@
 ### ansible-operator
 Operator for managing execution of ansible playbooks as cronjobs and jobs in a Kubernetes cluster. Once installed, it will watch all namespaces for resources of type ansiblejobs and ansiblecrons. For each resource type it will create Kubernetes job or cronjob to run the ansible executor pod.
 
+![overview](./overview.png)
+
 ### Installation
 To install the operator to your Kubernetes cluster you should have helm installed.
 
