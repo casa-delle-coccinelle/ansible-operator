@@ -1,0 +1,134 @@
+# Sample manifest for AnsibleCron with playbook located in git repository
+---
+apiVersion: ansible.casa-delle-coccinelle.link/v1alpha1
+kind: AnsibleCron
+metadata:
+  name: ansiblecron-sample
+  namespace: operator-example
+spec:
+  # schedule is required for the AnsibleCron CRD. In this case the playbook will executed every 30 minutes
+  schedule: "*/30 * * * *"
+  playbook:
+  # Git repo my-repo will be cloned using github SSH key, all requirements in my-repo/ansible/host1/requirements.yaml will be installed. Executor will run my-repo/ansible/host1/host1-playbook.yaml ansible playbook
+    git:
+      repo: ssh://git@github.com/my-organization/my-repo.git
+      repo_path: ansible/host1
+      playbook_name: host1-playbook.yaml
+      requirements_name: requirements.yaml
+  ssh_keys:
+    # Definition of SSH key for cloning git repo. Refer bellow for example configmap and secret. The config part for SSH key is optional and if not defined the key will be added for all hosts:
+    # Hosts *
+    #   IdentityFile: path/to/ssh/key
+    - name: github
+      secretRef:
+        name: github-ssh-key
+      config:
+        configMapRef:
+          name: github-ssh-key-config
+    - name: host1
+      secretRef:
+        name: host1-ssh-key
+      config:
+        secretRef:
+          name: ssh-key-1-config
+  # These roles and collection will be installed, too
+  roles:
+  - name: example.role
+    src: example.role.source
+  - name: another.role
+    src: git+ssh://git@github.com/example/another-role.git
+    version: master
+  collections:
+  - name: ansible.posix
+    version: 1.2.0
+  # Secret with name vault-secret will be mounted onto executor's pod
+  vault_password_secret:
+    secretRef:
+      name: vault-secret
+  # Secret with ansible inventory
+  inventory:
+    - secretRef:
+        name: inventory
+
+# Reference - https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-ssh-key
+  namespace: operator-example
+type: kubernetes.io/ssh-auth
+data:
+  ssh-privatekey: |
+          MIIEpQIBAAKCAQEAulqb/Y ...
+
+#The configuration in data.ssh_config will be added in ~/.ssh/config file as well as the correct path to the SSH key itself (IdentityFile)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: github-ssh-key-config
+  namespace: operator-example
+data:
+  ssh_config: |
+    Host github.com
+      HostName github.com
+      User git
+      Port 22
+      IdentitiesOnly yes
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: host1-ssh-key
+  namespace: operator-example
+type: kubernetes.io/ssh-auth
+data:
+  ssh-privatekey: |
+          MIIEpQIBAAKCAQEAulqb/Y ...
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: host1-ssh-key-config
+  namespace: operator-example
+data:
+  ssh_config: |
+    Host host1
+      HostName 172.16.1.2
+      User ansible
+      Port 22
+
+# Secret with ansible vault password. If more than one data is provided, the executor will print a warning and will try to run the playbook with first found in alphabetical order.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-secret
+  namespace: operator-example
+type: Opaque
+stringData:
+  vault.password: a-vault-password
+
+# Ansible inventory with credentials should be defined as Kubernetes secrets. More than one inventory file can be added to the secret.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: inventory
+  namespace: operator-example
+stringData:
+  inventory: |
+    [hosts]
+    host1
+    [other]
+    172.16.1.3 ansible_user=user ansible_password=password
+  another-inventory: |
+    [servers]
+    server1
+    server1
+
+# With this configuration the playbook command will be:
+# ansible-playbook my-repo/ansible/host1/host1-playbook.yaml --vault-password-file vault.password -i inventory -i another-inventory

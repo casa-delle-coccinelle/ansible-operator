@@ -18,7 +18,7 @@ If both *vault_password* and *vault_password_secret* are defined the password wi
 ### ssh_keys ([]object)
 List of SSH keys and SSH client configuration needed ansible to establish connection to the target hosts or to pull necessary repositories
 - **ssh_keys.name**, required - Name of the key
-- **ssh_keys.secretRef.name**, required - Name of Kubernetes secret, holding "ssh-privatekey" and "ssh-publickey" SSH key data. (reference - https://kubernetes.io/docs/concepts/configuration/secret/#use-case-pod-with-ssh-keys)
+- **ssh_keys.secretRef.name**, required - Name of Kubernetes secret, holding "ssh-privatekey" and "ssh-publickey" SSH key data. (reference - https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets )
 - **ssh_keys.config.configMapRef.name** - Name of Kubernetes configmap, holding SSH client configuration for the SSH key
 - **ssh_keys.config.secretRef.name** - Name of Kubernetes secret, holding SSH client configuration for the SSH key
 ### inventory ([]object)
