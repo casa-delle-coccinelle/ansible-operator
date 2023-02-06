@@ -5,7 +5,7 @@ Helm chart which installs ansible-operator app in Kubernetes cluster.
 | Variable | Description | Default | Required | 
 |--|--|--|--|
 | replicaCount | Number of pods in the repliceset. | 1 | No |
-| image.repository | Image repo | c-harbor.casa-delle-coccinelle.link/operator/ansible-operator | No |
+| image.repository | Image repo | ghcr.io/casa-delle-coccinelle/ansible-operator/ansible-operator | No |
 | image.pullPolicy | Image pull policy | IfNotPresent | No |
 | image.tag | Image tag | v0.1.0 | No |
 | imagePullSecrets | Image pull secrets | [] | No |
