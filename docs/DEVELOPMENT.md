@@ -51,38 +51,38 @@ Will delete CRDs, operator relese and namespace
 | GIT_REQUIREMENTS_NAME | Name of ansible requirements file | N/A |
 | GIT_REPO_PATH | Path to playbook in git repository | N/A |
 #### Directory structure of executor's container.
-/home
-└── ansible
-    └── keys
-        ├── key-0
-        │   ├── config
-        │   │   └── ssh_config
-        │   └── ssh-privatekey
-        └── key-1
-            ├── secret-config
-            │   └── ssh_config
-            └── ssh-privatekey
 
-/opt
-└── config
-    ├── config.sh
-    ├── inventory
-    │   ├── inventory1
-    │   └── inventory2
-    ├── options
-    │   └── options.list
-    ├── playbook
-    │   └── playbook.yaml
-    ├── requirements.yaml
-    ├── secret-inventory
-    │   └── inventory
-    ├── vars
-    │   ├── configmap
-    │   │   └── vars.yaml
-    │   ├── secret
-    │   │   └── vars.yaml
-    │   └── vars-configmap
-    │       └── vars-b512d08214a275f29cdb7ba9cb5b8f93.yaml
-    └── vault
-        └── vault.password
+    /home
+    └── ansible
+        └── keys
+            ├── key-0
+            │   ├── config
+            │   │   └── ssh_config
+            │   └── ssh-privatekey
+            └── key-1
+                ├── secret-config
+                │   └── ssh_config
+                └── ssh-privatekey
+    /opt
+    └── config
+        ├── config.sh
+        ├── inventory
+        │   ├── inventory1
+        │   └── inventory2
+        ├── options
+        │   └── options.list
+        ├── playbook
+        │   └── playbook.yaml
+        ├── requirements.yaml
+        ├── secret-inventory
+        │   └── inventory
+        ├── vars
+        │   ├── configmap
+        │   │   └── vars.yaml
+        │   ├── secret
+        │   │   └── vars.yaml
+        │   └── vars-configmap
+        │       └── vars-b512d08214a275f29cdb7ba9cb5b8f93.yaml
+        └── vault
+            └── vault.password
 
