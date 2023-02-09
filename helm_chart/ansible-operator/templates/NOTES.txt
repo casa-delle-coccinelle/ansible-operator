@@ -1,0 +1,22 @@
+===============================
+ansible-operator is installed in your cluster!!!
+-------------------------------
+
+===============================
+You can check the status of the pod(s) with:
+
+kubectl --namespace {{ .Release.Namespace }} get pods --selector=app.kubernetes.io/instance={{ .Release.Name }}
+-------------------------------
+
+{{- if .Values.metrics.enabled }}
+
+===============================
+Operator metrics can be checked by port-forward to the service, then go to you browser and type http://localhost:{{ .Values.speedTestPort }}/metrics
+
+kubectl --namespace {{ .Release.Namespace }} port-forward service/{{ include "ansible-operator.fullname" . | trunc 55 }}-metrics {{ .Values.metrics.port }}
+-------------------------------
+{{- end }}
+
+===============================
+For more information about ansible-operator, please visit https://github.com/casa-delle-coccinelle/ansible-operator
+===============================
