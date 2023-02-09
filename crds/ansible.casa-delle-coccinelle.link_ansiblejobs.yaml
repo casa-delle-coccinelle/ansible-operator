@@ -189,6 +189,9 @@ spec:
                       requirements_name:
                         description: Name of the ansible galaxy requirement file, should be located in the same path as the playbook
                         type: string
+                      repo_branch:
+                        description: Git repository branch, defaults to master
+                        type: string
                     required:
                       - repo
                   configMapRef:
