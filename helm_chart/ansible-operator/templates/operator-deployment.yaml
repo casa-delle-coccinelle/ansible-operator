@@ -18,6 +18,7 @@ spec:
   template:
     metadata:
       annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
         {{- if .Values.chartWideAnnotations }}
         {{- .Values.chartWideAnnotations | toYaml | nindent 8 }}
         {{- end }}
