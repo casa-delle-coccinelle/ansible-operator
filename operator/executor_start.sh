@@ -17,7 +17,7 @@ function logs_format(){
     level="${1}"
     shift 
     msg="${*}"
-    echo "{\"time\": \"$(date -Iseconds)\", \"level\": \"${level}\", \"msg\": \"${msg}\", \"namespace\": \"${ANSIBLE_EXECUTOR_NAMESPACE}\", \"name\": \"${ANSIBLE_EXECUTOR_NAME}\"}" #>&2
+    echo "{\"time\": \"$(date -Iseconds)\", \"level\": \"${level}\", \"msg\": \"${msg}\", \"namespace\": \"${ANSIBLE_EXECUTOR_NAMESPACE}\", \"name\": \"${ANSIBLE_EXECUTOR_NAME}\"}" >&2
 }
 
 
