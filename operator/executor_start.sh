@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# start.sh
+# executor_start.sh
 # shellcheck disable=SC1090
 
 PLAYBOOK_CONFIG_PATH=${PLAYBOOK_CONFIG_PATH:-/opt/config}
@@ -17,7 +17,7 @@ function logs_format(){
     level="${1}"
     shift 
     msg="${*}"
-    echo "{\"time\": \"$(date -Iseconds)\", \"level\": \"${level}\", \"msg\": \"${msg}\", \"namespace\": \"${ANSIBLE_EXECUTOR_NAMESPACE}\", \"name\": \"${ANSIBLE_EXECUTOR_NAME}\"}" >&2
+    echo "{\"time\": \"$(date -Iseconds)\", \"level\": \"${level}\", \"msg\": \"${msg}\", \"namespace\": \"${ANSIBLE_EXECUTOR_NAMESPACE}\", \"name\": \"${ANSIBLE_EXECUTOR_NAME}\"}" #>&2
 }
 
 
@@ -58,14 +58,17 @@ EOF
 }
 
 function git_repo_setup(){
-    logs_format info "Attempting to clone git repository ${GIT_REPO} with ${RETRIES} retries"
+    git_err=$(mktemp)
+    logs_format info "Attempting to clone git repository ${GIT_REPO}, branch ${GIT_REPO_BRANCH} with ${RETRIES} retries"
     for retry in $(seq 1 "${RETRIES}"); do
-        if git clone "${GIT_REPO}" "${PLAYBOOK_CONFIG_PATH}/repo" &>/dev/null;
+        if git clone --depth=1 --branch "${GIT_REPO_BRANCH}" "${GIT_REPO}" "${PLAYBOOK_CONFIG_PATH}/repo" 2>"${git_err}" 1>/dev/null;
         then
             logs_format info "Git repository cloned successfully"
             break
         else
-            logs_format info "Git clone command failed with exit code $? on ${retry} try"
+            logs_format warning "Git clone command failed with exit code $? on ${retry} try"
+            git_err_formatted=$(tr -d '\r' < "${git_err}" | sed ':a;N;$!ba;s/\n/\\n /g') # For some reason there is '\r' in git's stderr
+            logs_format warning "The exact git error was: \"${git_err_formatted}\""
         fi
         if [ "${retry}" -eq "${RETRIES}" ]; then
             logs_format error "Git repository was not cloned, exiting"
@@ -73,15 +76,6 @@ function git_repo_setup(){
         fi
         sleep "${RETRIES_INTERVAL}"
     done
-    logs_format info "Checkout to git branch ${GIT_REPO_BRANCH}"
-    cd "${PLAYBOOK_CONFIG_PATH}/repo"
-    if git checkout "${GIT_REPO_BRANCH}" &>/dev/null;
-    then
-        logs_format info "Git repository branch is now ${GIT_REPO_BRANCH}"
-    else
-        logs_format error "Git checkout command failed with exit code $?, exiting"
-        exit 1
-    fi
 }
 
 function install_requirements(){
