@@ -3,4 +3,13 @@ name: ansible-operator
 description: ansible-operator installation chart
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: "v0.1.0"
+kubbeVersion: ">=1.21.0"
+home: https://github.com/casa-delle-coccinelle/ansible-operator/tree/master
+keywords:
+  - ansible
+  - ansible-operator
+  - automation
+maintainers:
+  - name: Aneliya Ivanova
+    email: aneliya.n.ivanova@gmail.com
