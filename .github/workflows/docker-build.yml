@@ -1,9 +1,7 @@
-name: Build DEV Docker Image
+name: Build Release Docker Images
 
 on:
   push:
-    branches:
-      - master
     tags:
       - v**
     paths:
@@ -15,8 +13,9 @@ on:
       - 'operator/executor_start.sh'
 
 env:
-  OPERATOR_IMAGE_TAG_BASE: ghcr.io/ansible-operator
-  EXECUTOR_IMAGE_TAG_BASE: ghcr.io/ansible-executor
+  REGISTRY: ghcr.io
+  OPERATOR_IMAGE_TAG_BASE: ghcr.io/${{ github.repository }}/ansible-operator
+  EXECUTOR_IMAGE_TAG_BASE: ghcr.io/${{ github.repository }}/ansible-executor
   VERSION: ${{ github.ref_name }}
 
 
@@ -36,5 +35,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
     
       - uses: actions/checkout@v3
-      - name: Build the Docker image
+      - name: Build and push the Docker images
         run: make docker-build docker-push

@@ -1,4 +1,4 @@
-name: Build DEV Docker Image
+name: Build DEV Docker Images
 
 on:
   push:
@@ -36,5 +36,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
     
       - uses: actions/checkout@v3
-      - name: Build the Docker image
+      - name: Build and push the Docker images
         run: make docker-build docker-push
