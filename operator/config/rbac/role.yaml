@@ -1,0 +1,73 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+  ##
+  ## Base operator rules
+  ##
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - pods
+      - pods/exec
+      - pods/log
+      - configmaps
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  ##
+  ## Rules for ansible.casa-delle-coccinelle.link/v1alpha1, Kind: AnsibleJob
+  ##
+  - apiGroups:
+      - ansible.casa-delle-coccinelle.link
+    resources:
+      - ansiblejobs
+      - ansiblejobs/status
+      - ansiblejobs/finalizers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  ##
+  ## Rules for ansible.casa-delle-coccinelle.link/v1alpha1, Kind: AnsibleCron
+  ##
+  - apiGroups:
+      - ansible.casa-delle-coccinelle.link
+    resources:
+      - ansiblecrons
+      - ansiblecrons/status
+      - ansiblecrons/finalizers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+#+kubebuilder:scaffold:rules

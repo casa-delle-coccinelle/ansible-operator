@@ -1,0 +1,48 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: ansible-cronjob
+          image: {{ ansible_executor_image }}:{{ ansible_executor_image_tag }}
+          imagePullPolicy: {{ ansible_executor_image_pull_policy }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          command:
+            - /bin/bash
+            - -c
+            - |
+              bash {{ ansible_user_home }}/executor_start.sh
+          env:
+            - name: ANSIBLE_EXECUTOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: ANSIBLE_EXECUTOR_NAME
+              value: "{{ ansible_operator_meta.name }}"
+{% if additional_env is defined %}
+            {{ additional_env | to_nice_yaml | indent(width=12, first=False) }}
+{% endif %}
+          volumeMounts:
+{% include './templates/volume_mounts/requirements.j2' %}
+{% include './templates/volume_mounts/vault_password.j2' %}
+{% include './templates/volume_mounts/ssh_keys.j2' %}
+{% include './templates/volume_mounts/inventory.j2' %}
+{% include './templates/volume_mounts/playbook.j2' %}
+{% include './templates/volume_mounts/vars.j2' %}
+{% include './templates/volume_mounts/options.j2' %}
+      volumes:
+{% include './templates/volumes/requirements.j2' %}
+{% include './templates/volumes/vault_password.j2' %}
+{% include './templates/volumes/ssh_keys.j2' %}
+{% include './templates/volumes/inventory.j2' %}
+{% include './templates/volumes/playbook.j2' %}
+{% include './templates/volumes/vars.j2' %}
+{% include './templates/volumes/options.j2' %}
+      restartPolicy: "{{ job_restart_policy }}"
+      backoffLimit: "{{ job_backoff_limit }}"
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000

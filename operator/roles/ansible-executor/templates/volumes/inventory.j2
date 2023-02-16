@@ -1,0 +1,14 @@
+{% if inventory is defined %}
+{% for file in inventory %}
+{% if file.secret_ref is defined %}
+        - name: {{ file.secret_ref.name }}-inventory-secret
+          secret:
+            secretName: {{ file.secret_ref.name }}
+{% endif %}
+{% if file.config_map_ref.name is defined %}
+        - name: {{ file.config_map_ref.name }}-inventory
+          configMap:
+            name: {{ file.config_map_ref.name }}
+{% endif %}
+{% endfor %}
+{% endif %}

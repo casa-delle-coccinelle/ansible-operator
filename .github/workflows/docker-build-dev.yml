@@ -1,0 +1,40 @@
+name: Build DEV Docker Images
+
+on:
+  push:
+    branches:
+      - v**
+    paths:
+      - 'docker/**'
+      - 'operator/requirements.yml'
+      - 'operator/watches.yaml'
+      - 'operator/roles/**'
+      - 'operator/playbooks/**'
+      - 'operator/executor_start.sh'
+      - '.github/workflows/docker-build-dev.yml'
+
+env:
+  REGISTRY: ghcr.io
+  OPERATOR_IMAGE_TAG_BASE: ghcr.io/${{ github.repository }}/ansible-operator
+  EXECUTOR_IMAGE_TAG_BASE: ghcr.io/${{ github.repository }}/ansible-executor
+  VERSION: ${{ github.ref_name }}.dev
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      packages: write
+    steps:
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+    
+      - uses: actions/checkout@v3
+      - name: Build and push the Docker images
+        run: make docker-build docker-push

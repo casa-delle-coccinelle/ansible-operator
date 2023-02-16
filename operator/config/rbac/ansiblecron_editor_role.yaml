@@ -1,0 +1,24 @@
+# permissions for end users to edit ansiblecrons.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ansiblecron-editor-role
+rules:
+- apiGroups:
+  - ansible.casa-delle-coccinelle.link
+  resources:
+  - ansiblecrons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ansible.casa-delle-coccinelle.link
+  resources:
+  - ansiblecrons/status
+  verbs:
+  - get

@@ -1,0 +1,20 @@
+---
+- name: Create requirements configmap if defined
+  kubernetes.core.k8s:
+    template: requirements_configmap.j2
+  when: roles is defined or collections is defined
+
+- name: Create playbook configmap if defined
+  kubernetes.core.k8s:
+    template: playbook_config.j2
+  when: playbook.git.repo is defined
+
+- name: Create additional vars configmap if defined
+  kubernetes.core.k8s:
+    template: vars_configmap.j2
+  when: additional_vars|selectattr('name', 'defined')|selectattr('value', 'defined') is defined
+
+- name: Create additional options configmap if defined
+  kubernetes.core.k8s:
+    template: options_configmap.j2
+  when: additional_ansible_options is defined

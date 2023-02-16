@@ -1,0 +1,12 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ ansible_operator_meta.name }}-vars
+  namespace: {{ ansible_operator_meta.namespace }}
+data:
+  vars-{{ ansible_operator_meta.name|md5 + '.yaml' }}: |
+    ---
+{% for var in additional_vars|selectattr('name', 'defined')|selectattr('value', 'defined')|list %}
+    {{ var.name }}: {{ var.value }}
+{% endfor %}

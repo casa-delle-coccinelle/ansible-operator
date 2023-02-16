@@ -1,0 +1,302 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: ansiblejobs.ansible.casa-delle-coccinelle.link
+spec:
+  group: ansible.casa-delle-coccinelle.link
+  names:
+    kind: AnsibleJob
+    listKind: AnsibleJobList
+    plural: ansiblejobs
+    singular: ansiblejob
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: AnsibleJob is the Schema for the ansiblejobs API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the desired state of AnsibleJob
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+            properties:
+              roles:
+                description: Ansible galaxy roles list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Ansible role name
+                      type: string
+                    src:
+                      description: Ansible role source
+                      type: string
+                    version:
+                      description: Ansible role version
+                      type: string
+                  required:
+                    - name
+                    - src
+              collections:
+                description: Ansible galaxy collections list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Ansible collection name
+                      type: string
+                    version:
+                      description: Ansible collection version
+                      type: string
+                  required:
+                    - name
+              vault_password:
+                description: Ansible vault password
+                type: string
+                format: password
+              vault_password_secret:
+                description: Ansible vault password secret ref
+                type: object
+                properties:
+                  secretRef:
+                    type: object
+                    properties:
+                      name:
+                        description: Name of secret holding ansible vault password
+                        type: string
+                        pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                    required:
+                      - name
+                required:
+                  - secretRef
+                example:
+                  secretRef:
+                    name: foo-bar-0
+              ssh_keys:
+                description: SSH keys list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Use friendly SSH key name
+                      type: string
+                    secretRef:
+                      type: object
+                      properties:
+                        name:
+                          description: Name of secret with ssh-privatekey and ssh-publickey data
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                    config:
+                      type: object
+                      properties:
+                        configMapRef:
+                          type: object
+                          properties:
+                            name:
+                              description: Name of configmap holding SSH key client configuration
+                              type: string
+                              pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                          required:
+                            - name
+                        secretRef:
+                          type: object
+                          properties:
+                            name:
+                              description: Name of secret holding SSH key client configuration
+                              type: string
+                              pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                          required:
+                            - name
+                      anyOf:
+                        - required: [configMapRef]
+                        - required: [secretRef]
+                  required:
+                    - name
+                    - secretRef
+                  example:
+                    name: key-0
+                    secretRef:
+                      name: ssh-key-0
+                    config:
+                      configMapRef:
+                        name: ssh-key-0-config
+                      secretRef:
+                        name: ssh-key-0-config
+              inventory:
+                description: Ansible inventory list
+                type: array
+                items:
+                  type: object
+                  properties:
+                    configMapRef:
+                      type: object
+                      properties:
+                        name: 
+                          description: Name of configmap holding ansible inventory
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                    secretRef:
+                      type: object
+                      properties:
+                        name: 
+                          description: Name of secret holding ansible inventory
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                  anyOf:
+                    - required: [configMapRef]
+                    - required: [secretRef]
+              playbook:
+                description: Ansible playbook configuration
+                type: object
+                properties:
+                  git:
+                    description: Git repository configuration for ansible playbook
+                    type: object
+                    properties:
+                      repo:
+                        description: Git repository URL, holding ansible playbook
+                        type: string
+                      repo_path:
+                        description: Git repository path, relative to the repository root where ansible playbook is located
+                        type: string
+                      playbook_name:
+                        description: Name of the ansible playbook
+                        type: string
+                      requirements_name:
+                        description: Name of the ansible galaxy requirement file, should be located in the same path as the playbook
+                        type: string
+                      repo_branch:
+                        description: Git repository branch, defaults to master
+                        type: string
+                    required:
+                      - repo
+                  configMapRef:
+                    type: object
+                    properties:
+                      name:
+                        description: Name of configmap, holding ansible playbook
+                        type: string
+                        pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                    required:
+                      - name
+                  secretRef:
+                    type: object
+                    properties:
+                      name:
+                        description: Name of secret, holding ansible playbook
+                        type: string
+                        pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                    required:
+                      - name
+                oneOf:
+                  - required: [git]
+                  - required: [configMapRef]
+                  - required: [secretRef]
+              additional_vars:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Ansible variable name
+                      type: string
+                    value:
+                      description: Ansible variable value. Numeric and boolean values should be quoted with single quotes
+                      x-kubernetes-int-or-string: true
+                    configMapRef:
+                      type: object
+                      properties:
+                        name:
+                          description: Name of configmap holding ansible variables
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                    secretRef:
+                      type: object
+                      properties:
+                        name:
+                          description: Name of secret, holding ansible variables
+                          type: string
+                          pattern: '(^([a-z0-9])([a-z0-9-]{0,61}[a-z0-9])$)|(^[a-z0-9]$)'
+                      required:
+                        - name
+                  oneOf:
+                    - required: [name, value]
+                    - required: [configMapRef]
+                    - required: [secretRef]
+              additional_ansible_options:
+                description: List of additional ansible playbook options, will be supplied to the playbook as defined without verification.
+                type: array
+                items:
+                  type: string
+              additional_env:
+                description: List and environment variables
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: Environment variable name
+                      type: string
+                    value:
+                      description: Environment variable value. Numeric and boolean values should be quoted with single quotes.
+                      x-kubernetes-int-or-string: true
+                  required: [name, value]
+              job_backoffLimit:
+                description: Job backoff limit
+                type: integer
+                format: int32
+                minimum: 1
+                default: 1
+              job_restartPolicy:
+                description: Job restart policy
+                type: string
+                default: "OnFailure"
+              ansible_executor_image:
+                description: Docker image for ansible executor
+                type: string
+                default: "ghcr.io/casa-delle-coccinelle/ansible-operator/ansible-executor"
+              ansible_executor_image_tag:
+                description: Docker image tag for ansible executor
+                type: string
+                default: "v0.1.0"
+              ansible_executor_image_pull_policy:
+                description: Docker image pull policy for ansible executor
+                type: string
+                default: "IfNotPresent"
+            required:
+              - playbook
+          status:
+            description: Status defines the observed state of AnsibleJob
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

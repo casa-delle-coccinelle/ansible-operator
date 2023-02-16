@@ -1,0 +1,19 @@
+{% if additional_vars|selectattr('config_map_ref', 'defined')|list is defined %}
+{% for configmap in additional_vars|selectattr('config_map_ref', 'defined')|list %}
+        - name: vars-configmap-{{ configmap.config_map_ref.name }}
+          configMap:
+            name: {{ configmap.config_map_ref.name }}
+{% endfor %}
+{% endif %}
+{% if additional_vars|selectattr('secret_ref', 'defined')|list is defined %}
+{% for secret in additional_vars|selectattr('secret_ref', 'defined')|list %}
+        - name: vars-secret-{{ secret.secret_ref.name }}
+          secret:
+            secretName: {{ secret.secret_ref.name }}
+{% endfor %}
+{% endif %}
+{% if additional_vars|selectattr('name', 'defined')|selectattr('value', 'defined') is defined %}
+        - name: vars-configmap
+          configMap:
+            name: {{ ansible_operator_meta.name }}-vars
+{% endif %}

@@ -1,0 +1,77 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- if .Values.chartWideAnnotations }}
+  annotations:
+    {{- .Values.chartWideAnnotations | toYaml | nindent 4 }}
+  {{- end }}
+  labels:
+    control-plane: controller-manager
+    {{- include "ansible-operator.labels" . | nindent 4 }}
+  name: {{ include "ansible-operator.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+        {{- if .Values.chartWideAnnotations }}
+        {{- .Values.chartWideAnnotations | toYaml | nindent 8 }}
+        {{- end }}
+        {{- if .Values.podAnnotations }}
+        {{- .Values.podAnnotations | toYaml | nindent 8 }}
+        {{- end }}
+      labels:
+        control-plane: controller-manager
+        {{- include "ansible-operator.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: manager
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        {{- include "ansible-operator.manager-args" . | nindent 8 -}}
+        {{- if .Values.metrics.enabled -}}
+        ports:
+        - containerPort: {{ .Values.metrics.port }}
+          name: metrics
+          protocol: TCP
+        {{- end }}
+        {{- if .Values.managerEnv }}
+        env:
+        {{- range $env := .Values.managerEnv }}
+        - name: {{ $env.name }}
+          value: {{ $env.value }}
+        {{- end }}
+        {{- end }}
+        {{- include "ansible-operator.probes" . | nindent 8 -}} 
+        {{- with .Values.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext: 
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ansible-operator.serviceAccountName" . }} 
+      terminationGracePeriodSeconds: 10
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

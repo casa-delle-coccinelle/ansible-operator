@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: Aneliya Ivanova
+  description: Ansible role for creating Kubernetes cronjob or jobs based on configuration provided in custom resources of type AnsibleCron and AnsibleJob.
+  license: MIT
+
+  min_ansible_version: 2.9
+
+collections:
+- operator_sdk.util
+- kubernetes.core

@@ -1,0 +1,3 @@
+---
+ansible_config_volume: '/opt/config'
+ansible_user_home: '/home/ansible'

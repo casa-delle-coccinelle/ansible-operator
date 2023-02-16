@@ -1,0 +1,22 @@
+{{- if .Values.metrics.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  {{- if .Values.chartWideAnnotations }}
+  annotations:
+    {{- .Values.chartWideAnnotations | toYaml | nindent 4 }}
+  {{- end }}
+  labels:
+    control-plane: controller-manager
+    {{- include "ansible-operator.labels" . | nindent 4 }}
+  name: {{ include "ansible-operator.fullname" . | trunc 55 }}-metrics
+spec:
+  ports:
+  - name: metrics
+    port: {{ .Values.metrics.port }}
+    protocol: TCP
+    targetPort: metrics
+  selector:
+    control-plane: controller-manager
+{{ end }}

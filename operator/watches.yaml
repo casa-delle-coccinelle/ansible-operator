@@ -1,0 +1,11 @@
+---
+# Use the 'create api' subcommand to add watches to this file.
+- version: v1alpha1
+  group: ansible.casa-delle-coccinelle.link
+  kind: AnsibleJob
+  playbook: ansiblejob.yaml
+- version: v1alpha1
+  group: ansible.casa-delle-coccinelle.link
+  kind: AnsibleCron
+  playbook: ansiblecron.yaml
+#+kubebuilder:scaffold:watch

@@ -1,0 +1,18 @@
+---
+- name: Include secrets tasks
+  include_tasks: secrets.yaml
+  when: vault_password is defined
+
+- name: Include configmaps tasks
+  include_tasks: configmaps.yml
+
+- name: Deploy cronjob
+  kubernetes.core.k8s:
+    definition: "{{ lookup('ansible.builtin.template', './ansible_cronjob.j2') }}"
+  when: k8s_resource_type == "cronjob"
+
+- name: Deploy job
+  kubernetes.core.k8s:
+    definition: "{{ lookup('ansible.builtin.template', './ansible_job.j2') }}"
+  when: k8s_resource_type == "job"
+
