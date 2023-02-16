@@ -39,4 +39,4 @@ This will delete the CRDs and namespace and uninstall the helm release from the 
 * [Custom resource definitions](./CRDS.md)
 * [ansible-executor ansible role](./ANSIBLE_EXECUTOR.md)
 * [ansible-operator helm chart](./HELM_CHART.md)
-* [Makefile](./MAKEFILE.md)
+* [Development notes](./DEVELOPMENT.md)
