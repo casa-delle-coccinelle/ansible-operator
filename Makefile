@@ -1,4 +1,4 @@
-VERSION ?= v0.1.0
+VERSION ?= v0.1.1
 OPERATOR_IMAGE_TAG_BASE ?= c-harbor.casa-delle-coccinelle.link/operator/ansible-operator
 EXECUTOR_IMAGE_TAG_BASE ?= c-harbor.casa-delle-coccinelle.link/operator/ansible-executor
 IMG ?= $(OPERATOR_IMAGE_TAG_BASE):$(VERSION)
