@@ -53,9 +53,6 @@ rules:
   - ""
   resources:
   - secrets
-  - pods
-  - pods/exec
-  - pods/log
   - configmaps
   verbs:
   - create
@@ -123,28 +120,6 @@ rules:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ include "ansible-operator.fullname" . | trunc 57 }}-proxy
-  labels:
-    {{- include "ansible-operator.labels" . | nindent 4 }}
-  {{- include "ansible-operator.serviceAccountAnnotations" . | nindent 2 }}
-rules:
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  verbs:
-  - create
-- apiGroups:
-  - authorization.k8s.io
-  resources:
-  - subjectaccessreviews
-  verbs:
-  - create
-
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ include "ansible-operator.fullname" . | trunc 47 }}-leader-election
@@ -173,23 +148,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: {{ include "ansible-operator.fullname" . | trunc 55 }}-manager
-subjects:
-- kind: ServiceAccount
-  name: {{ include "ansible-operator.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace }}
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: {{ include "ansible-operator.fullname" . | trunc 57 }}-proxy
-  labels:
-    {{- include "ansible-operator.labels" . | nindent 4 }}
-  {{- include "ansible-operator.serviceAccountAnnotations" . | nindent 2 }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ include "ansible-operator.fullname" . | trunc 57 }}-proxy
 subjects:
 - kind: ServiceAccount
   name: {{ include "ansible-operator.serviceAccountName" . }}
