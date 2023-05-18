@@ -1,0 +1,16 @@
+StrictHostKeyChecking no
+UserKnownHostsFile /dev/null
+
+{% for key in keys %}
+{% if key.config_path %}
+{% for path in key.config_path %}
+{{ include_file(path) }} 
+  IdentityFile {{ key.identity_key }}
+
+{% endfor %}
+{% else %}
+Host *
+  IdentityFile {{ key.identity_key }}
+
+{% endif %}
+{% endfor %}
