@@ -6,6 +6,8 @@
 #
 # Distributed under terms of the MIT license.
 
+# noqa: E501
+
 """
 
 """
@@ -19,6 +21,7 @@ import argparse
 from ruamel.yaml import YAML
 import logging
 import sys
+import subprocess
 
 logger = logging.getLogger("ansible-executor")
 logging.basicConfig(stream=sys.stdout,
@@ -30,7 +33,7 @@ logger.setLevel(logging.INFO)
 def parse_args():
     """ Parse command line arguments. """
 
-    parser = argparse.ArgumentParser(prog="zeus", description='Outdoor lights automation')
+    parser = argparse.ArgumentParser(prog="ansible-executor", description='Run ansible playbook')
     parser.add_argument("-c", "--config_file", help="Configuration files path", action='append')
 
     args = parser.parse_args()
@@ -112,6 +115,7 @@ def clone_git_repo(config, repo_dest):
     repo_url = f'ssh://{_repo}'
 
 # TODO GitPython lib prints the cmd on fail (username and password are visible)
+# TODO add url encoding
     if _token is not None:
         repo_url = f'https://{_token}@{_repo}'
     elif _username is not None and _password is not None:
@@ -119,15 +123,133 @@ def clone_git_repo(config, repo_dest):
     Repo.clone_from(repo_url, repo_dest, branch=_repo_branch, depth=1)
 
 
+def install_galaxy_requirements(path):
+
+    galaxy = subprocess.run(["ansible-galaxy", "install", "-r", path])
+    logging.info(f'Ansible galaxy installation exit code is {galaxy.returncode}')
+
+
+def load_playbook_inventory(path):
+
+    inventory = ''
+
+    if os.path.exists(path) and os.path.isdir(path):
+        if "secret-inventory" in os.listdir(path):
+            for inventory_file in os.listdir(os.path.join(path, "secret-inventory")):
+                #inventory = f'-i {os.path.join(path, "secret-inventory", inventory_file)}'
+                inventory = " -i ".join([inventory, os.path.join(path, "secret-inventory", inventory_file)])
+        if "inventory" in os.listdir(path):
+            for inventory_file in os.listdir(os.path.join(path, "inventory")):
+                inventory = " -i ".join([inventory, os.path.join(path, "inventory", inventory_file)])
+
+    print(inventory)
+    return inventory
+
+
+def load_playbook_vault_file(path):
+    if os.path.exists(path) and os.path.isdir(path):
+        if "vault" in os.listdir(path):
+            files_list = [file for file in os.listdir(os.path.join(path, "vault")) if os.path.isfile(os.path.join(path, "vault", file))]
+            print(files_list)
+            files_count = len(files_list)
+            if files_count > 1:
+                logging.warning('More than 1 file is possible candidate for ansible vault password. This may lead to playbook execution failure.')
+                vault_password = f"--vault-password-file {os.path.join(path, 'vault', files_list[0])}"
+                logging.warning(f"First found file {os.path.join(path, 'vault', files_list[0])} will be used for vault password")
+            else:
+                vault_password = f"--vault-password-file {os.path.join(path, 'vault', files_list[0])}"
+                logging.info(f"Ansible vault password will be loaded from file {os.path.join(path, 'vault', files_list[0])}")
+
+    print(vault_password)
+    return vault_password
+
+
+def load_playbook_vars_files(path):
+    var_files = ''
+
+    if os.path.exists(path) and os.path.isdir(path):
+        if "vars" in os.listdir(path) and os.path.isdir(os.path.join(path, "vars")):
+            if "configmap" in os.listdir(os.path.join(path, "vars")) and os.path.isdir(os.path.join(path, "vars", "configmap")):
+                for var_file in os.listdir(os.path.join(path, "vars", "configmap")):
+                    var_files = " -e @".join([var_files, os.path.join(path, "vars", "configmap", var_file)])
+            if "secret" in os.listdir(os.path.join(path, "vars")) and os.path.isdir(os.path.join(path, "vars", "secret")):
+                for var_file in os.listdir(os.path.join(path, "vars", "secret")):
+                    var_files = " -e @".join([var_files, os.path.join(path, "vars", "secret", var_file)])
+            if "vars-configmap" in os.listdir(os.path.join(path, "vars")) and os.path.isdir(os.path.join(path, "vars", "vars-configmap")):
+                for var_file in os.listdir(os.path.join(path, "vars", "vars-configmap")):
+                    var_files = " -e @".join([var_files, os.path.join(path, "vars", "vars-configmap", var_file)])
+    print(var_files)
+    return var_files
+
+
+def load_playbook_options(path):
+    options = ''
+
+    if os.path.exists(path) and os.path.isdir(path):
+        if "options" in os.listdir(path) and os.path.isdir(os.path.join(path, "options")):
+            if "options.list" in os.listdir(os.path.join(path, "options")) and os.path.isfile(os.path.join(path, "options", "options.list")):
+                with open(os.path.join(path, "options", "options.list")) as f:
+                    options_lines = f.readlines()
+                    for option in options_lines:
+                        options = " ".join([options, option.strip()])
+
+    print(options)
+    return options
+
+
+def load_playbook_path(config, git_path=None, playbook_path=None):
+    _git_playbook_name = config.get('git_playbook_name')
+    _git_repo_path = config.get('git_repo_path')
+
+    if _git_playbook_name is not None and git_path is not None:
+        if _git_repo_path is not None and os.path.isdir(os.path.join(git_path, _git_repo_path)):
+            if _git_playbook_name in os.listdir(os.path.join(git_path, _git_repo_path)):
+                ansible_playbook_path = os.path.join(git_path, _git_repo_path, _git_playbook_name)
+    elif playbook_path is not None and os.path.isdir(playbook_path):
+        if "playbook" in os.listdir(playbook_path) and os.path.isdir(os.path.join(playbook_path, "playbook")):
+            files_list = [file for file in os.listdir(os.path.join(playbook_path, "playbook")) if os.path.isfile(os.path.join(playbook_path, "playbook", file))]
+            print(files_list)
+            files_count = len(files_list)
+            if files_count > 1:
+                logging.error("More than 1 file is possible candidate for ansible playbook")
+                raise RuntimeError
+            ansible_playbook_path = os.path.join(playbook_path, "playbook", files_list[0])
+
+    print(ansible_playbook_path)
+    return ansible_playbook_path
+
+
 def main():
     config_files = vars(parse_args())
     config_files_list = config_files['config_file']
     config = getConfiguration(config_files_list)
+
+    playbook_config_path = os.environ.get('PLAYBOOK_CONFIG_PATH') or '/opt/config'
+    playbook_config_file = os.environ.get('PLAYBOOK_CONFIG_FILE') or 'config.yaml'  # TODO: fix this in operator
+    retries = os.environ.get('RETRIES') or 3
+    retries_interval = os.environ.get('RETRIES_INTERVAL') or 10
+    ssh_username = os.environ.get('SSH_USER_NAME') or 'ansible'
+    ssh_keys_path = os.environ.get('SSH_KEYS_PATH') or 'keys'
+
+    _git_requirements_name = config.get('git_requirements_name')
+    _git_repo_path = config.get('git_repo_path')
+
     print(config)
 
-    ssh_config(keys_path='/tmp/python_test')
+    ssh_config(keys_path=os.path.join('/home/', ssh_username, 'keys'))
 
-    # clone_git_repo(config, '/tmp/python_repo_test/repo')
+    clone_git_repo(config, os.path.join(playbook_config_path, 'repo'))
+
+    if "requirements.yaml" in os.listdir(playbook_config_path):
+        install_galaxy_requirements(os.path.join(playbook_config_path, "requirements.yaml"))
+    if _git_requirements_name is not None and _git_requirements_name in os.path.join(playbook_config_path, "repo", _git_repo_path):
+        install_galaxy_requirements(os.path.join(playbook_config_path, "repo", _git_repo_path, _git_requirements_name))
+
+    inventory = load_playbook_inventory(playbook_config_path)
+    vault_password = load_playbook_vault_file(playbook_config_path)
+    var_files = load_playbook_vars_files(playbook_config_path)
+    options = load_playbook_options(playbook_config_path)
+    playbook_path = load_playbook_path(config, git_dest_path)  # TODO: hadle playbook file load
 
 
 if __name__ == '__main__':
