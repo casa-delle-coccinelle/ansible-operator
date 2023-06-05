@@ -63,7 +63,7 @@ def getConfiguration(config_files=None):
     return config
 
 
-def ssh_config(keys_path='/home/ansible/keys'):
+def load_ssh_config(keys_path='/home/ansible/keys'):
 
     # print(os.path.expanduser)
 
@@ -73,29 +73,39 @@ def ssh_config(keys_path='/home/ansible/keys'):
 
     if os.path.exists(keys_path) and os.path.isdir(keys_path):
         keys_dirs = [os.path.join(keys_path, key) for key in os.listdir(keys_path)]
-        print(keys_dirs)
         for key in keys_dirs:
-            print(f'>>>>> {key}')
             if 'ssh-privatekey' in os.listdir(key):
-                print(os.path.join(key, 'ssh-privatekey'))
                 identity_key_path = os.path.join(key, 'ssh-privatekey')
             if 'config' in os.listdir(key):
                 for config in os.listdir(os.path.join(key, 'config')):
-                    ssh_config_path.append(os.path.join(key, 'config', config))
+                    if os.path.isfile(os.path.join(key, 'config', config)):
+                        ssh_config_path.append(os.path.join(key, 'config', config))
             if 'secret-config' in os.listdir(key):
                 for secret_config in os.listdir(os.path.join(key, 'secret-config')):
-                    print(f'>>>>>>>>>>>> {secret_config}')
-                    ssh_config_path.append(os.path.join(key, 'secret-config', secret_config))
+                    if os.path.isfile(os.path.join(key, 'secret-config', secret_config)):
+                        ssh_config_path.append(os.path.join(key, 'secret-config', secret_config))
             ssh_config_list.append({'identity_key': identity_key_path, 'config_path': ssh_config_path.copy()})
             ssh_config_path.clear()
 
-    print(ssh_config_list)
+    generate_ssh_config(ssh_config_list)
+
+
+
+def generate_ssh_config(ssh_config):
+
+    user_home = os.environ.get('HOME')
+
+    if not os.path.exists(os.path.join(user_home, '.ssh')):
+        os.makedirs(os.path.join(user_home, '.ssh'))
+        os.chmod(os.path.join(user_home, '.ssh'), 0o600)
 
     environment = Environment(loader=FileSystemLoader("./"), trim_blocks=True, lstrip_blocks=True)
     template = environment.get_template('ssh_config.j2')
     environment.globals['include_file'] = include_file
-    content = template.render(keys=ssh_config_list)
-    print(content)
+    content = template.render(keys=ssh_config)
+
+    with open(os.path.join(user_home, '.ssh', 'config'), 'w') as f:
+        f.write(content)
 
 
 def include_file(name):
@@ -112,7 +122,7 @@ def clone_git_repo(config, repo_dest):
     _password = config.get('git_password')
     _token = config.get('git_token')
 
-    repo_url = f'ssh://{_repo}'
+    repo_url = f'{_repo}'
 
 # TODO GitPython lib prints the cmd on fail (username and password are visible)
 # TODO add url encoding
@@ -124,76 +134,96 @@ def clone_git_repo(config, repo_dest):
 
 
 def install_galaxy_requirements(path):
+    # TODO: Add retry
 
-    galaxy = subprocess.run(["ansible-galaxy", "install", "-r", path])
-    logging.info(f'Ansible galaxy installation exit code is {galaxy.returncode}')
+    logger.info(f'Installing ansible galaxy requirements from file {path}')
+    galaxy = subprocess.run(["ansible-galaxy", "install", "-r", path], capture_output=True)
+    logger.info(f'Ansible galaxy execution output was: "{galaxy.stdout}"')
+    logger.info(f'Ansible galaxy installation exit code is {galaxy.returncode}')
 
 
 def load_playbook_inventory(path):
 
-    inventory = ''
+    inventory = []
 
     if os.path.exists(path) and os.path.isdir(path):
         if "secret-inventory" in os.listdir(path):
             for inventory_file in os.listdir(os.path.join(path, "secret-inventory")):
-                #inventory = f'-i {os.path.join(path, "secret-inventory", inventory_file)}'
-                inventory = " -i ".join([inventory, os.path.join(path, "secret-inventory", inventory_file)])
+                if os.path.isfile(os.path.join(path, 'secret-inventory', inventory_file)):
+                    #inventory = " -i ".join([inventory, os.path.join(path, "secret-inventory", inventory_file)])
+                    inventory.append('-i')
+                    inventory.append(os.path.join(path, "secret-inventory", inventory_file))
         if "inventory" in os.listdir(path):
             for inventory_file in os.listdir(os.path.join(path, "inventory")):
-                inventory = " -i ".join([inventory, os.path.join(path, "inventory", inventory_file)])
+                if os.path.isfile(os.path.join(path, 'inventory', inventory_file)):
+                    #inventory = " -i ".join([inventory, os.path.join(path, "inventory", inventory_file)])
+                    inventory.append('-i')
+                    inventory.append(os.path.join(path, "inventory", inventory_file))
 
-    print(inventory)
     return inventory
 
 
 def load_playbook_vault_file(path):
+
+    vault_password = ['--vault-password-file']
+
     if os.path.exists(path) and os.path.isdir(path):
         if "vault" in os.listdir(path):
             files_list = [file for file in os.listdir(os.path.join(path, "vault")) if os.path.isfile(os.path.join(path, "vault", file))]
             print(files_list)
             files_count = len(files_list)
             if files_count > 1:
-                logging.warning('More than 1 file is possible candidate for ansible vault password. This may lead to playbook execution failure.')
-                vault_password = f"--vault-password-file {os.path.join(path, 'vault', files_list[0])}"
-                logging.warning(f"First found file {os.path.join(path, 'vault', files_list[0])} will be used for vault password")
+                logger.warning('More than 1 file is possible candidate for ansible vault password. This may lead to playbook execution failure.')
+                vault_password.append(os.path.join(path, 'vault', files_list[0]))
+                #vault_password = f"--vault-password-file {os.path.join(path, 'vault', files_list[0])}"
+                logger.warning(f"First found file {os.path.join(path, 'vault', files_list[0])} will be used for vault password")
             else:
-                vault_password = f"--vault-password-file {os.path.join(path, 'vault', files_list[0])}"
-                logging.info(f"Ansible vault password will be loaded from file {os.path.join(path, 'vault', files_list[0])}")
+                vault_password.append(os.path.join(path, 'vault', files_list[0]))
+                #vault_password = f"--vault-password-file {os.path.join(path, 'vault', files_list[0])}"
+                logger.info(f"Ansible vault password will be loaded from file {os.path.join(path, 'vault', files_list[0])}")
 
-    print(vault_password)
     return vault_password
 
 
 def load_playbook_vars_files(path):
-    var_files = ''
+
+    var_files = []
 
     if os.path.exists(path) and os.path.isdir(path):
         if "vars" in os.listdir(path) and os.path.isdir(os.path.join(path, "vars")):
             if "configmap" in os.listdir(os.path.join(path, "vars")) and os.path.isdir(os.path.join(path, "vars", "configmap")):
                 for var_file in os.listdir(os.path.join(path, "vars", "configmap")):
-                    var_files = " -e @".join([var_files, os.path.join(path, "vars", "configmap", var_file)])
+                    if os.path.isfile(os.path.join(path, 'vars', "configmap", var_file)):
+                        #var_files = " -e @".join([var_files, os.path.join(path, "vars", "configmap", var_file)])
+                        var_files.append('-e')
+                        var_files.append(f'@{os.path.join(path, "vars", "configmap", var_file)}')
             if "secret" in os.listdir(os.path.join(path, "vars")) and os.path.isdir(os.path.join(path, "vars", "secret")):
                 for var_file in os.listdir(os.path.join(path, "vars", "secret")):
-                    var_files = " -e @".join([var_files, os.path.join(path, "vars", "secret", var_file)])
+                    if os.path.isfile(os.path.join(path, 'vars', "secret", var_file)):
+                        #var_files = " -e @".join([var_files, os.path.join(path, "vars", "secret", var_file)])
+                        var_files.append('-e')
+                        var_files.append(f'@{os.path.join(path, "vars", "secret", var_file)}')
             if "vars-configmap" in os.listdir(os.path.join(path, "vars")) and os.path.isdir(os.path.join(path, "vars", "vars-configmap")):
                 for var_file in os.listdir(os.path.join(path, "vars", "vars-configmap")):
-                    var_files = " -e @".join([var_files, os.path.join(path, "vars", "vars-configmap", var_file)])
-    print(var_files)
+                    if os.path.isfile(os.path.join(path, 'vars', "vars-configmap", var_file)):
+                        #var_files = " -e @".join([var_files, os.path.join(path, "vars", "vars-configmap", var_file)])
+                        var_files.append('-e')
+                        var_files.append(f'@{os.path.join(path, "vars", "vars-configmap", var_file)}')
     return var_files
 
 
 def load_playbook_options(path):
-    options = ''
+
+    options = []
 
     if os.path.exists(path) and os.path.isdir(path):
         if "options" in os.listdir(path) and os.path.isdir(os.path.join(path, "options")):
             if "options.list" in os.listdir(os.path.join(path, "options")) and os.path.isfile(os.path.join(path, "options", "options.list")):
                 with open(os.path.join(path, "options", "options.list")) as f:
-                    options_lines = f.readlines()
-                    for option in options_lines:
-                        options = " ".join([options, option.strip()])
+                    for line in f:
+                        for word in line.split(' ', 1):
+                            options.append(word.strip())
 
-    print(options)
     return options
 
 
@@ -208,15 +238,40 @@ def load_playbook_path(config, git_path=None, playbook_path=None):
     elif playbook_path is not None and os.path.isdir(playbook_path):
         if "playbook" in os.listdir(playbook_path) and os.path.isdir(os.path.join(playbook_path, "playbook")):
             files_list = [file for file in os.listdir(os.path.join(playbook_path, "playbook")) if os.path.isfile(os.path.join(playbook_path, "playbook", file))]
-            print(files_list)
             files_count = len(files_list)
             if files_count > 1:
-                logging.error("More than 1 file is possible candidate for ansible playbook")
+                logger.error("More than 1 file is possible candidate for ansible playbook")
                 raise RuntimeError
             ansible_playbook_path = os.path.join(playbook_path, "playbook", files_list[0])
 
-    print(ansible_playbook_path)
     return ansible_playbook_path
+
+
+def execute_playbook(playbook_path, playbook_options=None, playbook_vars=None, playbook_vault_password=None, playbook_inventory=None):
+
+    #playbook_cmd = playbook_path
+    #print(playbook_cmd)
+
+    #if playbook_options is not None:
+    #    print(type(playbook_options))
+    #    playbook_cmd = " ".join([playbook_cmd, playbook_options])
+    #    print(playbook_cmd)
+    #if playbook_vars is not None:
+    #    print(playbook_vars)
+    #    playbook_cmd = " ".join([playbook_cmd, playbook_vars])
+    #if playbook_vault_password is not None:
+    #    playbook_cmd = " ".join([playbook_cmd, playbook_vault_password])
+    #if playbook_inventory is not None:
+    #    playbook_cmd = " ".join([playbook_cmd, playbook_inventory])
+
+    #print(playbook_cmd)
+    #print(playbook_path)
+
+    playbook = subprocess.run(['ansible-playbook', playbook_path, *playbook_options, *playbook_vars, *playbook_vault_password, *playbook_inventory], capture_output=True)
+    logger.info(f'{playbook.returncode}')
+    logger.info(f'{playbook.stdout}')
+    logger.info(f'{playbook.stderr}')
+    logger.info(f'{playbook.args}')
 
 
 def main():
@@ -234,22 +289,21 @@ def main():
     _git_requirements_name = config.get('git_requirements_name')
     _git_repo_path = config.get('git_repo_path')
 
-    print(config)
-
-    ssh_config(keys_path=os.path.join('/home/', ssh_username, 'keys'))
+    load_ssh_config(keys_path=os.path.join('/home/', ssh_username, 'keys'))
 
     clone_git_repo(config, os.path.join(playbook_config_path, 'repo'))
 
     if "requirements.yaml" in os.listdir(playbook_config_path):
         install_galaxy_requirements(os.path.join(playbook_config_path, "requirements.yaml"))
-    if _git_requirements_name is not None and _git_requirements_name in os.path.join(playbook_config_path, "repo", _git_repo_path):
+    if _git_requirements_name is not None and _git_requirements_name in os.listdir(os.path.join(playbook_config_path, "repo", _git_repo_path)):
         install_galaxy_requirements(os.path.join(playbook_config_path, "repo", _git_repo_path, _git_requirements_name))
 
     inventory = load_playbook_inventory(playbook_config_path)
     vault_password = load_playbook_vault_file(playbook_config_path)
     var_files = load_playbook_vars_files(playbook_config_path)
     options = load_playbook_options(playbook_config_path)
-    playbook_path = load_playbook_path(config, git_dest_path)  # TODO: hadle playbook file load
+    playbook_path = load_playbook_path(config, git_path=os.path.join(playbook_config_path, 'repo'), playbook_path=playbook_config_path)  # TODO: hadle playbook file load
+    execute_playbook(playbook_path, options, var_files, vault_password, inventory)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 {% if playbook.git.repo is defined %}
             - name: config
-              mountPath: {{ ansible_config_volume }}/config.sh
-              subPath: config.sh
+              mountPath: {{ ansible_config_volume }}/config.yaml
+              subPath: config.yaml
 {% elif playbook.secret_ref is defined %}
             - name: playbook
               mountPath: {{ ansible_config_volume }}/playbook

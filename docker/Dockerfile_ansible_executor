@@ -1,14 +1,21 @@
-FROM alpine:3.12
+FROM alpine:3.18
 
-RUN apk add ansible py-pip
+RUN apk add ansible py-pip python3
 
 RUN apk add bash git openssh-client
+
+RUN ln -sf python3 /usr/bin/python
+
+RUN pip install --upgrade pip setuptools wheel && \
+    apk add --no-cache --virtual .build-deps gcc g++ python3-dev && \
+    pip install Jinja2 ruamel.yaml GitPython && \
+    apk del .build-deps
 
 RUN adduser -h /home/ansible -s /bin/bash ansible -D
 
 RUN mkdir /home/ansible/.ssh /opt/config
 
-COPY executor_start.sh /home/ansible 
+COPY ./*  /home/ansible/ 
 
 RUN chown -R ansible:ansible /home/ansible
 

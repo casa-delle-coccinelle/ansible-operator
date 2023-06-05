@@ -5,11 +5,11 @@ metadata:
   name: {{ ansible_operator_meta.name }}-config
   namespace: {{ ansible_operator_meta.namespace }}
 data:
-  config.sh: |
-    export GIT_REPO={{ playbook.git.repo }}
-    export GIT_REPO_PATH={{ playbook.git.repo_path | default('/') }}
-    export GIT_PLAYBOOK_NAME={{ playbook.git.playbook_name | default('playbook.yaml') }}
+  config.yaml: |
+    git_repo: {{ playbook.git.repo }}
+    git_repo_path: {{ playbook.git.repo_path | default('/') }}
+    git_playbook_name: {{ playbook.git.playbook_name | default('playbook.yaml') }}
 {% if playbook.git.requirements_name is defined %}
-    export GIT_REQUIREMENTS_NAME={{ playbook.git.requirements_name }}
+    git_requirements_name: {{ playbook.git.requirements_name }}
 {% endif %}
-    export GIT_REPO_BRANCH={{ playbook.git.repo_branch | default('master') }}
+    git_repo_branch: {{ playbook.git.repo_branch | default('master') }}

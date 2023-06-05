@@ -13,7 +13,11 @@ spec:
             - /bin/bash
             - -c
             - |
-              bash {{ ansible_user_home }}/executor_start.sh
+{% if playbook.git.repo is defined %}
+              python init.py -c {{ ansible_config_volume }}/config.yaml || echo -n
+{% else %}
+              python init.py
+{% endif %}
           env:
             - name: ANSIBLE_EXECUTOR_NAMESPACE
               valueFrom:
